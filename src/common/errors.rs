@@ -1,0 +1,13 @@
+pub static ERROR_NOT_ACTIVE: &[u8] = b"contract is not active";
+pub static ERROR_TOKEN_NOT_SET: &[u8] = b"governance token not set";
+pub static ERROR_TOKEN_ALREADY_SET: &[u8] = b"governance token already set";
+pub static ERROR_QUORUM_NOT_SET: &[u8] = b"quorum not set";
+pub static ERROR_VOTING_PERIOD_NOT_SET: &[u8] = b"voting period not set";
+pub static ERROR_PROPOSAL_AMOUNT_NOT_SET: &[u8] = b"minimum proposal amount not set";
+pub static ERROR_INVALID_PAYMENT: &[u8] = b"wrong payment token";
+pub static ERROR_ZERO_PAYMENT: &[u8] = b"zero payments are not allowed";
+pub static ERROR_NOT_ENOUGH_FUNDS_TO_PROPOSE: &[u8] = b"not enough funds to create proposal";
+pub static ERROR_PROPOSAL_NOT_FOUND: &[u8] = b"proposal does not exist";
+pub static ERROR_PROPOSAL_NOT_ACTIVE: &[u8] = b"proposal is not active";
+pub static ERROR_VOTING_PERIOD_NOT_ENDED: &[u8] = b"voting period not ended";
+pub static ERROR_PROPOSAL_NOT_SUCCEEDED: &[u8] = b"proposal not succeeded";
