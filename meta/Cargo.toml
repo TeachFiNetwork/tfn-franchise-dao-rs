@@ -7,7 +7,7 @@ authors = [ "DrDelphi",]
 
 [dev-dependencies]
 
-[dependencies.tfn-launchpad]
+[dependencies.tfn-franchise-dao]
 path = ".."
 
 [dependencies.multiversx-sc-meta-lib]
