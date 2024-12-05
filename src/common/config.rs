@@ -61,10 +61,15 @@ pub struct Proposal<M: ManagedTypeApi> {
 
 #[multiversx_sc::module]
 pub trait ConfigModule {
+    // owner
+    #[view(getOwner)]
+    #[storage_mapper("owner")]
+    fn owner(&self) -> SingleValueMapper<ManagedAddress>;
+
     // state
-    #[only_owner]
     #[endpoint(setStateActive)]
     fn set_state_active(&self) {
+        self.only_owner();
         require!(self.quorum().get() > 0, ERROR_QUORUM_NOT_SET);
         require!(self.voting_period().get() > 0, ERROR_VOTING_PERIOD_NOT_SET);
         require!(self.min_proposal_amount().get() > 0, ERROR_PROPOSAL_AMOUNT_NOT_SET);
@@ -72,9 +77,9 @@ pub trait ConfigModule {
         self.state().set(State::Active);
     }
 
-    #[only_owner]
     #[endpoint(setStateInactive)]
     fn set_state_inactive(&self) {
+        self.only_owner();
         self.state().set(State::Inactive);
     }
 
@@ -82,15 +87,20 @@ pub trait ConfigModule {
     #[storage_mapper("state")]
     fn state(&self) -> SingleValueMapper<State>;
 
+    // main dao sc address
+    #[view(getMainDAO)]
+    #[storage_mapper("main_dao")]
+    fn main_dao(&self) -> SingleValueMapper<ManagedAddress>;
+
     // governance token
     #[view(getGovernanceToken)]
     #[storage_mapper("governance_token")]
     fn governance_token(&self) -> SingleValueMapper<TokenIdentifier>;
 
     // min proposal amount
-    #[only_owner]
     #[endpoint(setMinProposalAmount)]
     fn set_min_proposal_amount(&self, amount: &BigUint) {
+        self.only_owner();
         self.min_proposal_amount().set(amount);
     }
 
@@ -99,9 +109,9 @@ pub trait ConfigModule {
     fn min_proposal_amount(&self) -> SingleValueMapper<BigUint>;
 
     // voting period (blocks)
-    #[only_owner]
     #[endpoint(setVotingPeriod)]
     fn set_voting_period(&self, period: u64) {
+        self.only_owner();
         self.voting_period().set(period);
     }
 
@@ -110,9 +120,9 @@ pub trait ConfigModule {
     fn voting_period(&self) -> SingleValueMapper<u64>;
 
     // quorum
-    #[only_owner]
     #[endpoint(setQuorum)]
     fn set_quorum(&self, quorum: &BigUint) {
+        self.only_owner();
         self.quorum().set(quorum);
     }
 
@@ -182,5 +192,15 @@ pub trait ConfigModule {
         } else {
             ProposalStatus::Defeated
         }
+    }
+
+    // helpers
+
+    fn only_owner(&self) {
+        let caller = self.blockchain().get_caller();
+        require!(
+            caller == self.owner().get() || caller == self.blockchain().get_owner_address(),
+            ERROR_ONLY_OWNER
+        );
     }
 }

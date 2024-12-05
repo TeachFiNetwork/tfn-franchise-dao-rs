@@ -13,8 +13,12 @@ pub trait TFNFranchiseDAOContract<ContractReader>:
     #[init]
     fn init(
         &self,
+        owner: &ManagedAddress,
+        main_dao: &ManagedAddress,
         token: &TokenIdentifier
     ) {
+        self.owner().set(owner);
+        self.main_dao().set(main_dao);
         self.governance_token().set(token);
         self.set_state_inactive();
     }
@@ -22,6 +26,12 @@ pub trait TFNFranchiseDAOContract<ContractReader>:
     #[upgrade]
     fn upgrade(&self) {
         self.set_state_inactive();
+    }
+
+    #[only_owner]
+    #[endpoint(changeOwner)]
+    fn change_owner(&self, new_owner: ManagedAddress) {
+        self.owner().set(new_owner);
     }
 
     #[payable("*")]

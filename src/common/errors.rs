@@ -1,3 +1,4 @@
+pub static ERROR_ONLY_OWNER: &[u8] = b"only owner can call this function";
 pub static ERROR_NOT_ACTIVE: &[u8] = b"contract is not active";
 pub static ERROR_QUORUM_NOT_SET: &[u8] = b"quorum not set";
 pub static ERROR_VOTING_PERIOD_NOT_SET: &[u8] = b"voting period not set";
