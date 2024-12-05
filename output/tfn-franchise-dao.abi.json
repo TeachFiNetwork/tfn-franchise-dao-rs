@@ -18,7 +18,20 @@
     },
     "name": "TFNFranchiseDAOContract",
     "constructor": {
-        "inputs": [],
+        "inputs": [
+            {
+                "name": "owner",
+                "type": "Address"
+            },
+            {
+                "name": "main_dao",
+                "type": "Address"
+            },
+            {
+                "name": "token",
+                "type": "TokenIdentifier"
+            }
+        ],
         "outputs": []
     },
     "upgradeConstructor": {
@@ -26,6 +39,27 @@
         "outputs": []
     },
     "endpoints": [
+        {
+            "name": "changeOwner",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "new_owner",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "addFunds",
+            "mutability": "mutable",
+            "payableInTokens": [
+                "*"
+            ],
+            "inputs": [],
+            "outputs": []
+        },
         {
             "name": "propose",
             "mutability": "mutable",
@@ -95,15 +129,23 @@
             "outputs": []
         },
         {
+            "name": "getOwner",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "Address"
+                }
+            ]
+        },
+        {
             "name": "setStateActive",
-            "onlyOwner": true,
             "mutability": "mutable",
             "inputs": [],
             "outputs": []
         },
         {
             "name": "setStateInactive",
-            "onlyOwner": true,
             "mutability": "mutable",
             "inputs": [],
             "outputs": []
@@ -119,16 +161,14 @@
             ]
         },
         {
-            "name": "setGovernanceToken",
-            "onlyOwner": true,
-            "mutability": "mutable",
-            "inputs": [
+            "name": "getMainDAO",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
                 {
-                    "name": "token",
-                    "type": "TokenIdentifier"
+                    "type": "Address"
                 }
-            ],
-            "outputs": []
+            ]
         },
         {
             "name": "getGovernanceToken",
@@ -142,7 +182,6 @@
         },
         {
             "name": "setMinProposalAmount",
-            "onlyOwner": true,
             "mutability": "mutable",
             "inputs": [
                 {
@@ -164,7 +203,6 @@
         },
         {
             "name": "setVotingPeriod",
-            "onlyOwner": true,
             "mutability": "mutable",
             "inputs": [
                 {
@@ -186,7 +224,6 @@
         },
         {
             "name": "setQuorum",
-            "onlyOwner": true,
             "mutability": "mutable",
             "inputs": [
                 {
