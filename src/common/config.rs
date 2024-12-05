@@ -65,7 +65,6 @@ pub trait ConfigModule {
     #[only_owner]
     #[endpoint(setStateActive)]
     fn set_state_active(&self) {
-        require!(!self.governance_token().is_empty(), ERROR_TOKEN_NOT_SET);
         require!(self.quorum().get() > 0, ERROR_QUORUM_NOT_SET);
         require!(self.voting_period().get() > 0, ERROR_VOTING_PERIOD_NOT_SET);
         require!(self.min_proposal_amount().get() > 0, ERROR_PROPOSAL_AMOUNT_NOT_SET);
@@ -84,14 +83,6 @@ pub trait ConfigModule {
     fn state(&self) -> SingleValueMapper<State>;
 
     // governance token
-    #[only_owner]
-    #[endpoint(setGovernanceToken)]
-    fn set_governance_token(&self, token: TokenIdentifier) {
-        require!(self.governance_token().is_empty(), ERROR_TOKEN_ALREADY_SET);
-
-        self.governance_token().set(token);
-    }
-
     #[view(getGovernanceToken)]
     #[storage_mapper("governance_token")]
     fn governance_token(&self) -> SingleValueMapper<TokenIdentifier>;

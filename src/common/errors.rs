@@ -1,6 +1,4 @@
 pub static ERROR_NOT_ACTIVE: &[u8] = b"contract is not active";
-pub static ERROR_TOKEN_NOT_SET: &[u8] = b"governance token not set";
-pub static ERROR_TOKEN_ALREADY_SET: &[u8] = b"governance token already set";
 pub static ERROR_QUORUM_NOT_SET: &[u8] = b"quorum not set";
 pub static ERROR_VOTING_PERIOD_NOT_SET: &[u8] = b"voting period not set";
 pub static ERROR_PROPOSAL_AMOUNT_NOT_SET: &[u8] = b"minimum proposal amount not set";

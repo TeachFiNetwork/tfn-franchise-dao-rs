@@ -11,7 +11,11 @@ pub trait TFNFranchiseDAOContract<ContractReader>:
     common::config::ConfigModule
 {
     #[init]
-    fn init(&self) {
+    fn init(
+        &self,
+        token: &TokenIdentifier
+    ) {
+        self.governance_token().set(token);
         self.set_state_inactive();
     }
 
@@ -19,6 +23,10 @@ pub trait TFNFranchiseDAOContract<ContractReader>:
     fn upgrade(&self) {
         self.set_state_inactive();
     }
+
+    #[payable("*")]
+    #[endpoint(addFunds)]
+    fn add_funds(&self) {}
 
     #[payable("*")]
     #[endpoint]
