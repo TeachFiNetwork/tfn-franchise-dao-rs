@@ -20,12 +20,12 @@ pub trait TFNFranchiseDAOContract<ContractReader>:
         self.owner().set(owner);
         self.main_dao().set(main_dao);
         self.governance_token().set(token);
-        self.set_state_inactive();
+        self.state().set(State::Inactive);
     }
 
     #[upgrade]
     fn upgrade(&self) {
-        self.set_state_inactive();
+        self.state().set(State::Inactive);
     }
 
     #[only_owner]
