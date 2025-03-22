@@ -10,3 +10,6 @@ pub static ERROR_PROPOSAL_NOT_FOUND: &[u8] = b"proposal does not exist";
 pub static ERROR_PROPOSAL_NOT_ACTIVE: &[u8] = b"proposal is not active";
 pub static ERROR_VOTING_PERIOD_NOT_ENDED: &[u8] = b"voting period not ended";
 pub static ERROR_PROPOSAL_NOT_SUCCEEDED: &[u8] = b"proposal not succeeded";
+pub static ERROR_STUDENT_NOT_FOUND: &[u8] = b"student not found";
+pub static ERROR_EMPLOYEE_NOT_FOUND: &[u8] = b"employee not found";
+pub static ERROR_CLASS_NOT_FOUND: &[u8] = b"class not found";

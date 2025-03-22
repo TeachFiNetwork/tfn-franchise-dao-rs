@@ -14,5 +14,11 @@ num-bigint = "0.4.2"
 [dependencies.multiversx-sc]
 version = "0.54.4"
 
+[dependencies.tfn-employee]
+path = "../tfn-employee-rs"
+
+[dependencies.tfn-student]
+path = "../tfn-student-rs"
+
 [dev-dependencies.multiversx-sc-scenario]
 version = "0.54.4"

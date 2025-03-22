@@ -24,12 +24,20 @@
                 "type": "Address"
             },
             {
+                "name": "token",
+                "type": "TokenIdentifier"
+            },
+            {
                 "name": "main_dao",
                 "type": "Address"
             },
             {
-                "name": "token",
-                "type": "TokenIdentifier"
+                "name": "template_employee",
+                "type": "Address"
+            },
+            {
+                "name": "template_student",
+                "type": "Address"
             }
         ],
         "outputs": []
@@ -162,6 +170,26 @@
         },
         {
             "name": "getMainDAO",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "Address"
+                }
+            ]
+        },
+        {
+            "name": "getTemplateEmployee",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "Address"
+                }
+            ]
+        },
+        {
+            "name": "getTemplateStudent",
             "mutability": "readonly",
             "inputs": [],
             "outputs": [
@@ -320,6 +348,46 @@
             ]
         },
         {
+            "name": "getProposalsCount",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "status",
+                    "type": "optional<ProposalStatus>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "getProposals",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "idx_from",
+                    "type": "u64"
+                },
+                {
+                    "name": "idx_to",
+                    "type": "u64"
+                },
+                {
+                    "name": "status",
+                    "type": "optional<ProposalStatus>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "List<Proposal>"
+                }
+            ]
+        },
+        {
             "name": "getProposalStatus",
             "mutability": "readonly",
             "inputs": [
@@ -350,8 +418,12 @@
                     "type": "Address"
                 },
                 {
-                    "name": "payments",
-                    "type": "List<bytes>"
+                    "name": "payment_token",
+                    "type": "EgldOrEsdtTokenIdentifier"
+                },
+                {
+                    "name": "payment_amount",
+                    "type": "BigUint"
                 },
                 {
                     "name": "endpoint_name",
@@ -379,16 +451,20 @@
                     "type": "Address"
                 },
                 {
-                    "name": "description",
+                    "name": "title",
                     "type": "bytes"
+                },
+                {
+                    "name": "status",
+                    "type": "ProposalStatus"
                 },
                 {
                     "name": "was_executed",
                     "type": "bool"
                 },
                 {
-                    "name": "actions",
-                    "type": "List<Action>"
+                    "name": "action",
+                    "type": "Action"
                 },
                 {
                     "name": "num_upvotes",
@@ -408,8 +484,8 @@
                     "type": "bytes"
                 },
                 {
-                    "name": "actions",
-                    "type": "List<Action>"
+                    "name": "action",
+                    "type": "Action"
                 }
             ]
         },

@@ -3,6 +3,7 @@
 multiversx_sc::imports!();
 
 pub mod common;
+pub mod school;
 
 use common::{config::*, errors::*};
 
@@ -14,11 +15,15 @@ pub trait TFNFranchiseDAOContract<ContractReader>:
     fn init(
         &self,
         owner: &ManagedAddress,
+        token: &TokenIdentifier,
         main_dao: &ManagedAddress,
-        token: &TokenIdentifier
+        template_employee: &ManagedAddress,
+        template_student: &ManagedAddress,
     ) {
         self.owner().set(owner);
         self.main_dao().set(main_dao);
+        self.template_employee().set(template_employee);
+        self.template_student().set(template_student);
         self.governance_token().set(token);
         self.state().set(State::Inactive);
     }
