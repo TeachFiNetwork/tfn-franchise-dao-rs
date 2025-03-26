@@ -26,18 +26,6 @@
             {
                 "name": "token",
                 "type": "TokenIdentifier"
-            },
-            {
-                "name": "main_dao",
-                "type": "Address"
-            },
-            {
-                "name": "template_employee",
-                "type": "Address"
-            },
-            {
-                "name": "template_student",
-                "type": "Address"
             }
         ],
         "outputs": []

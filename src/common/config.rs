@@ -262,7 +262,6 @@ pub trait ConfigModule {
     }
 
     // helpers
-
     fn only_owner(&self) {
         let caller = self.blockchain().get_caller();
         require!(

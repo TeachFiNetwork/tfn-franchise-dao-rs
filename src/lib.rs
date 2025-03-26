@@ -4,8 +4,10 @@ multiversx_sc::imports!();
 
 pub mod common;
 pub mod school;
+pub mod proxies;
 
 use common::{config::*, errors::*};
+use crate::proxies::launchpad_proxy::{self};
 
 #[multiversx_sc::contract]
 pub trait TFNFranchiseDAOContract<ContractReader>:
@@ -16,21 +18,29 @@ pub trait TFNFranchiseDAOContract<ContractReader>:
         &self,
         owner: &ManagedAddress,
         token: &TokenIdentifier,
-        main_dao: &ManagedAddress,
-        template_employee: &ManagedAddress,
-        template_student: &ManagedAddress,
     ) {
         self.owner().set(owner);
+        self.governance_token().set(token);
+        let caller = self.blockchain().get_caller();
+        let main_dao: ManagedAddress = self.launchpad_contract_proxy()
+            .contract(caller.clone())
+            .main_dao()
+            .execute_on_dest_context();
+        let template_employee: ManagedAddress = self.launchpad_contract_proxy()
+            .contract(caller.clone())
+            .template_employee()
+            .execute_on_dest_context();
+        let template_student: ManagedAddress = self.launchpad_contract_proxy()
+            .contract(caller)
+            .template_student()
+            .execute_on_dest_context();
         self.main_dao().set(main_dao);
         self.template_employee().set(template_employee);
         self.template_student().set(template_student);
-        self.governance_token().set(token);
-        self.state().set(State::Inactive);
     }
 
     #[upgrade]
     fn upgrade(&self) {
-        // self.state().set(State::Inactive);
     }
 
     #[only_owner]
@@ -169,4 +179,8 @@ pub trait TFNFranchiseDAOContract<ContractReader>:
 
         Result::Ok(())
     }
+
+    // proxies
+    #[proxy]
+    fn launchpad_contract_proxy(&self) -> launchpad_proxy::Proxy<Self::Api>;
 }
