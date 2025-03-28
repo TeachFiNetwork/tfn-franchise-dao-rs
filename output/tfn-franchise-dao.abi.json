@@ -389,6 +389,267 @@
                     "type": "ProposalStatus"
                 }
             ]
+        },
+        {
+            "name": "getClass",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "Class"
+                }
+            ]
+        },
+        {
+            "name": "getLastClassId",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "getClassesCount",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "u32"
+                }
+            ]
+        },
+        {
+            "name": "getClasses",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "List<Class>"
+                }
+            ]
+        },
+        {
+            "name": "getClassStudents",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "class_id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "List<Student>"
+                }
+            ]
+        },
+        {
+            "name": "getClassTeachers",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "class_id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "List<Employee>"
+                }
+            ]
+        },
+        {
+            "name": "getFullClassInfo",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "class_id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "tuple<Class,List<Student>,List<Employee>>"
+                }
+            ]
+        },
+        {
+            "name": "getEmployee",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "Employee"
+                }
+            ]
+        },
+        {
+            "name": "getLastEmployeeId",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "getEmployeesCount",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "u32"
+                }
+            ]
+        },
+        {
+            "name": "getEmployees",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "List<Employee>"
+                }
+            ]
+        },
+        {
+            "name": "getEmployeeByAddress",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "Option<Employee>"
+                }
+            ]
+        },
+        {
+            "name": "getEmployeeByWallet",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "Option<Employee>"
+                }
+            ]
+        },
+        {
+            "name": "getStudent",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "Student"
+                }
+            ]
+        },
+        {
+            "name": "getLastStudentId",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "getStudentsCount",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "u32"
+                }
+            ]
+        },
+        {
+            "name": "getStudents",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "List<Student>"
+                }
+            ]
+        },
+        {
+            "name": "getStudentByAddress",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "Option<Student>"
+                }
+            ]
+        },
+        {
+            "name": "getStudentByWallet",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "Option<Student>"
+                }
+            ]
+        },
+        {
+            "name": "getTaxAmount",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "BigUint"
+                }
+            ]
+        },
+        {
+            "name": "setTaxAmount",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "new_tax_amount",
+                    "type": "BigUint"
+                }
+            ],
+            "outputs": []
         }
     ],
     "esdtAttributes": [],
@@ -420,6 +681,48 @@
                 {
                     "name": "arguments",
                     "type": "List<bytes>"
+                }
+            ]
+        },
+        "Class": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "u64"
+                },
+                {
+                    "name": "year",
+                    "type": "u32"
+                },
+                {
+                    "name": "name",
+                    "type": "bytes"
+                },
+                {
+                    "name": "schedule",
+                    "type": "List<SubjectSlot>"
+                }
+            ]
+        },
+        "Employee": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "u64"
+                },
+                {
+                    "name": "sc",
+                    "type": "Address"
+                },
+                {
+                    "name": "wallet",
+                    "type": "Address"
+                },
+                {
+                    "name": "is_teacher",
+                    "type": "bool"
                 }
             ]
         },
@@ -512,6 +815,60 @@
                 {
                     "name": "Active",
                     "discriminant": 1
+                }
+            ]
+        },
+        "Student": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "u64"
+                },
+                {
+                    "name": "sc",
+                    "type": "Address"
+                },
+                {
+                    "name": "wallet",
+                    "type": "Address"
+                },
+                {
+                    "name": "class_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "tax_validity",
+                    "type": "u64"
+                }
+            ]
+        },
+        "SubjectSlot": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "u64"
+                },
+                {
+                    "name": "day_of_week",
+                    "type": "u32"
+                },
+                {
+                    "name": "start_time",
+                    "type": "u32"
+                },
+                {
+                    "name": "end_time",
+                    "type": "u32"
+                },
+                {
+                    "name": "subject",
+                    "type": "bytes"
+                },
+                {
+                    "name": "teacher_id",
+                    "type": "u64"
                 }
             ]
         }

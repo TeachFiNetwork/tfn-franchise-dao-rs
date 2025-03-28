@@ -158,7 +158,7 @@ super::config::ConfigModule
     }
 
     #[view(getEmployeeByAddress)]
-    fn get_employee_by_address(&self, address: ManagedAddress<Self::Api>) -> Option<Employee<Self::Api>> {
+    fn get_employee_by_address(&self, address: ManagedAddress) -> Option<Employee<Self::Api>> {
         for i in 0..self.last_employee_id().get() {
             if self.employees(i).is_empty() {
                 continue;
@@ -174,7 +174,7 @@ super::config::ConfigModule
     }
 
     #[view(getEmployeeByWallet)]
-    fn get_employee_by_wallet(&self, address: ManagedAddress<Self::Api>) -> Option<Employee<Self::Api>> {
+    fn get_employee_by_wallet(&self, address: ManagedAddress) -> Option<Employee<Self::Api>> {
         for i in 0..self.last_employee_id().get() {
             if self.employees(i).is_empty() {
                 continue;
@@ -221,7 +221,7 @@ super::config::ConfigModule
     }
 
     #[view(getStudentByAddress)]
-    fn get_student_by_address(&self, address: ManagedAddress<Self::Api>) -> Option<Student<Self::Api>> {
+    fn get_student_by_address(&self, address: ManagedAddress) -> Option<Student<Self::Api>> {
         for i in 0..self.last_student_id().get() {
             if self.students(i).is_empty() {
                 continue;
@@ -237,7 +237,7 @@ super::config::ConfigModule
     }
 
     #[view(getStudentByWallet)]
-    fn get_student_by_wallet(&self, address: ManagedAddress<Self::Api>) -> Option<Student<Self::Api>> {
+    fn get_student_by_wallet(&self, address: ManagedAddress) -> Option<Student<Self::Api>> {
         for i in 0..self.last_student_id().get() {
             if self.students(i).is_empty() {
                 continue;

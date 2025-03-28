@@ -11,7 +11,8 @@ use crate::proxies::launchpad_proxy::{self};
 
 #[multiversx_sc::contract]
 pub trait TFNFranchiseDAOContract<ContractReader>:
-    common::config::ConfigModule
+common::config::ConfigModule
++common::school_config::SchoolConfigModule
 {
     #[init]
     fn init(
@@ -37,6 +38,7 @@ pub trait TFNFranchiseDAOContract<ContractReader>:
         self.main_dao().set(main_dao);
         self.template_employee().set(template_employee);
         self.template_student().set(template_student);
+        self.set_state_active();
     }
 
     #[upgrade]
