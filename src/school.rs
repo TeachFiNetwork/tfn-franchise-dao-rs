@@ -14,6 +14,7 @@ pub trait SchoolModule:
 school_config::SchoolConfigModule
 +config::ConfigModule
 {
+    // classes endpoints
     #[endpoint(createClass)]
     fn create_class(&self, year: usize, name: ManagedBuffer<Self::Api>) -> u64{
         require!(self.state().get() == State::Active, ERROR_NOT_ACTIVE);
@@ -70,6 +71,7 @@ school_config::SchoolConfigModule
         let student = Student {
             id: self.last_student_id().get(),
             sc: new_address,
+            wallet: ManagedAddress::zero(),
             class_id,
             tax_validity: 0,
         };
@@ -96,9 +98,14 @@ school_config::SchoolConfigModule
         require!(self.state().get() == State::Active, ERROR_NOT_ACTIVE);
         self.only_owner();
 
+        let wallet = self.student_contract_proxy()
+            .contract(sc.clone())
+            .wallet()
+            .execute_on_dest_context();
         let student = Student {
             id: self.last_student_id().get(),
             sc,
+            wallet,
             class_id,
             tax_validity: 0,
         };
@@ -108,6 +115,17 @@ school_config::SchoolConfigModule
             .contract(student.sc.clone())
             .set_state_active()
             .execute_on_dest_context::<()>();
+    }
+
+    #[endpoint(changeStudentWallet)]
+    fn change_student_wallet(&self, student_id: u64, new_wallet: ManagedAddress) {
+        require!(self.state().get() == State::Active, ERROR_NOT_ACTIVE);
+        self.only_owner();
+        require!(!self.students(student_id).is_empty(), ERROR_STUDENT_NOT_FOUND);
+
+        let mut student = self.students(student_id).get();
+        student.wallet = new_wallet;
+        self.students(student_id).set(&student);
     }
 
     // employees endpoints
@@ -125,6 +143,7 @@ school_config::SchoolConfigModule
         let employee = Employee {
             id: self.last_employee_id().get(),
             sc: new_address,
+            wallet: ManagedAddress::zero(),
             is_teacher,
         };
         self.employees(employee.id).set(&employee);
@@ -150,9 +169,14 @@ school_config::SchoolConfigModule
         require!(self.state().get() == State::Active, ERROR_NOT_ACTIVE);
         self.only_owner();
 
+        let wallet = self.employee_contract_proxy()
+            .contract(sc.clone())
+            .wallet()
+            .execute_on_dest_context();
         let employee = Employee {
             id: self.last_employee_id().get(),
             sc,
+            wallet,
             is_teacher,
         };
         self.employees(employee.id).set(&employee);
