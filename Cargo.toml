@@ -20,5 +20,8 @@ path = "../tfn-employee-rs"
 [dependencies.tfn-student]
 path = "../tfn-student-rs"
 
+[dependencies.tfn-platform]
+path = "../tfn-platform-rs"
+
 [dev-dependencies.multiversx-sc-scenario]
 version = "0.54.4"

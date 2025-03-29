@@ -7,6 +7,11 @@ pub trait LaunchpadProxy {
     #[storage_mapper("main_dao")]
     fn main_dao(&self) -> SingleValueMapper<ManagedAddress>;
 
+    // platform address
+    #[view(getPlatform)]
+    #[storage_mapper("platform")]
+    fn platform(&self) -> SingleValueMapper<ManagedAddress>;
+
     // template employee sc address
     #[view(getTemplateEmployee)]
     #[storage_mapper("template_employee")]

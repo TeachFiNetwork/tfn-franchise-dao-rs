@@ -8,6 +8,7 @@ use tfn_employee::ProxyTrait as EmployeeProxy;
 use tfn_employee::common::config::ProxyTrait as _;
 use tfn_student::ProxyTrait as StudentProxy;
 use tfn_student::common::config::ProxyTrait as _;
+use tfn_platform::ProxyTrait as PlatformProxy;
 
 #[multiversx_sc::module]
 pub trait SchoolModule:
@@ -77,6 +78,11 @@ school_config::SchoolConfigModule
         };
         self.students(student.id).set(&student);
         self.last_student_id().set(student.id + 1);
+
+        self.platform_contract_proxy()
+            .contract(self.platform().get())
+            .whitelist_address(student.sc)
+            .execute_on_dest_context::<()>();
     }
 
     #[endpoint(expellStudent)]
@@ -87,10 +93,21 @@ school_config::SchoolConfigModule
 
         let student = self.students(student_id).get();
         self.student_contract_proxy()
-            .contract(student.sc)
+            .contract(student.sc.clone())
             .set_state_inactive()
             .execute_on_dest_context::<()>();
         self.students(student_id).clear();
+
+        self.platform_contract_proxy()
+            .contract(self.platform().get())
+            .remove_address(student.sc)
+            .execute_on_dest_context::<()>();
+        if student.wallet != ManagedAddress::zero() {
+            self.platform_contract_proxy()
+                .contract(self.platform().get())
+                .remove_address(student.wallet)
+                .execute_on_dest_context::<()>();
+        }
     }
 
     #[endpoint(reEnrollStudent)]
@@ -98,14 +115,14 @@ school_config::SchoolConfigModule
         require!(self.state().get() == State::Active, ERROR_NOT_ACTIVE);
         self.only_owner();
 
-        let wallet = self.student_contract_proxy()
+        let wallet: ManagedAddress = self.student_contract_proxy()
             .contract(sc.clone())
             .wallet()
             .execute_on_dest_context();
         let student = Student {
             id: self.last_student_id().get(),
             sc,
-            wallet,
+            wallet: wallet.clone(),
             class_id,
             tax_validity: 0,
         };
@@ -115,6 +132,16 @@ school_config::SchoolConfigModule
             .contract(student.sc.clone())
             .set_state_active()
             .execute_on_dest_context::<()>();
+        self.platform_contract_proxy()
+            .contract(self.platform().get())
+            .whitelist_address(student.sc)
+            .execute_on_dest_context::<()>();
+        if wallet != ManagedAddress::zero() {
+            self.platform_contract_proxy()
+                .contract(self.platform().get())
+                .whitelist_address(wallet)
+                .execute_on_dest_context::<()>();
+        }
     }
 
     #[endpoint(changeStudentWallet)]
@@ -193,4 +220,7 @@ school_config::SchoolConfigModule
 
     #[proxy]
     fn student_contract_proxy(&self) -> tfn_student::Proxy<Self::Api>;
+
+    #[proxy]
+    fn platform_contract_proxy(&self) -> tfn_platform::Proxy<Self::Api>;
 }

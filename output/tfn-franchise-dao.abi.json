@@ -187,6 +187,16 @@
             ]
         },
         {
+            "name": "getPlatform",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "Address"
+                }
+            ]
+        },
+        {
             "name": "getGovernanceToken",
             "mutability": "readonly",
             "inputs": [],
