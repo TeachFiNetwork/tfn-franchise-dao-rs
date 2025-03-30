@@ -401,6 +401,16 @@
             ]
         },
         {
+            "name": "getContractInfo",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "ContractInfo"
+                }
+            ]
+        },
+        {
             "name": "getClass",
             "mutability": "readonly",
             "inputs": [
@@ -712,6 +722,59 @@
                 {
                     "name": "schedule",
                     "type": "List<SubjectSlot>"
+                }
+            ]
+        },
+        "ContractInfo": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "state",
+                    "type": "State"
+                },
+                {
+                    "name": "owner",
+                    "type": "Address"
+                },
+                {
+                    "name": "governance_token",
+                    "type": "TokenIdentifier"
+                },
+                {
+                    "name": "quorum",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "voting_period",
+                    "type": "u64"
+                },
+                {
+                    "name": "min_proposal_amount",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "main_dao",
+                    "type": "Address"
+                },
+                {
+                    "name": "template_employee",
+                    "type": "Address"
+                },
+                {
+                    "name": "template_student",
+                    "type": "Address"
+                },
+                {
+                    "name": "platform",
+                    "type": "Address"
+                },
+                {
+                    "name": "proposals_count",
+                    "type": "u64"
+                },
+                {
+                    "name": "last_proposal_id",
+                    "type": "u64"
                 }
             ]
         },

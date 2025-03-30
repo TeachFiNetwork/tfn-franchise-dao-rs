@@ -61,6 +61,23 @@ pub struct Proposal<M: ManagedTypeApi> {
     pub num_downvotes: BigUint<M>,
 }
 
+#[type_abi]
+#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, ManagedVecItem)]
+pub struct ContractInfo<M: ManagedTypeApi> {
+    pub state: State,
+    pub owner: ManagedAddress<M>,
+    pub governance_token: TokenIdentifier<M>,
+    pub quorum: BigUint<M>,
+    pub voting_period: u64,
+    pub min_proposal_amount: BigUint<M>,
+    pub main_dao: ManagedAddress<M>,
+    pub template_employee: ManagedAddress<M>,
+    pub template_student: ManagedAddress<M>,
+    pub platform: ManagedAddress<M>,
+    pub proposals_count: u64,
+    pub last_proposal_id: u64,
+}
+
 #[multiversx_sc::module]
 pub trait ConfigModule {
     // owner
@@ -260,6 +277,24 @@ pub trait ConfigModule {
             ProposalStatus::Succeeded
         } else {
             ProposalStatus::Defeated
+        }
+    }
+
+    #[view(getContractInfo)]
+    fn get_contract_info(&self) -> ContractInfo<Self::Api> {
+        ContractInfo {
+            state: self.state().get(),
+            owner: self.owner().get(),
+            governance_token: self.governance_token().get(),
+            quorum: self.quorum().get(),
+            voting_period: self.voting_period().get(),
+            min_proposal_amount: self.min_proposal_amount().get(),
+            main_dao: self.main_dao().get(),
+            template_employee: self.template_employee().get(),
+            template_student: self.template_student().get(),
+            platform: self.platform().get(),
+            proposals_count: self.get_proposals_count(OptionalValue::None),
+            last_proposal_id: self.last_proposal_id().get(),
         }
     }
 
