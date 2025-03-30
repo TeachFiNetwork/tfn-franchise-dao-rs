@@ -43,7 +43,6 @@ common::config::ConfigModule
         self.template_employee().set(template_employee);
         self.template_student().set(template_student);
         self.platform().set(platform);
-        self.set_state_active();
     }
 
     #[upgrade]
