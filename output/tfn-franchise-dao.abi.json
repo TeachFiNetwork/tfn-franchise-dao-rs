@@ -1280,31 +1280,35 @@
                     "type": "TokenIdentifier"
                 },
                 {
-                    "name": "quorum",
-                    "type": "BigUint"
+                    "name": "voting_tokens",
+                    "type": "List<TokenIdentifier>"
+                },
+                {
+                    "name": "voting_token_weights",
+                    "type": "List<BigUint>"
                 },
                 {
                     "name": "voting_period",
                     "type": "u64"
                 },
                 {
-                    "name": "min_proposal_amount",
+                    "name": "quorum",
                     "type": "BigUint"
                 },
                 {
-                    "name": "main_dao",
-                    "type": "Address"
+                    "name": "board_quorum",
+                    "type": "u32"
                 },
                 {
-                    "name": "platform",
-                    "type": "Address"
-                },
-                {
-                    "name": "proposals_count",
-                    "type": "u64"
+                    "name": "board_members",
+                    "type": "List<Address>"
                 },
                 {
                     "name": "last_proposal_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "proposals_count",
                     "type": "u64"
                 }
             ]
