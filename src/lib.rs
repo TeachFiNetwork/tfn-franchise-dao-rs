@@ -5,14 +5,16 @@ multiversx_sc::imports!();
 pub mod common;
 pub mod school;
 pub mod proxies;
+pub mod multisig;
 
-use common::{config::*, errors::*};
+use common::{config::*, consts::*, errors::*};
 use crate::proxies::launchpad_proxy::{self};
 
 #[multiversx_sc::contract]
 pub trait TFNFranchiseDAOContract<ContractReader>:
 common::config::ConfigModule
 +common::school_config::SchoolConfigModule
++common::board_config::BoardConfigModule
 {
     #[init]
     fn init(
@@ -43,6 +45,9 @@ common::config::ConfigModule
         self.template_employee().set(template_employee);
         self.template_student().set(template_student);
         self.platform().set(platform);
+
+        self.board_members().insert(owner.clone());
+        self.voting_tokens().insert(token.clone(), BigUint::from(ONE));
     }
 
     #[upgrade]
@@ -59,45 +64,45 @@ common::config::ConfigModule
     #[endpoint(addFunds)]
     fn add_funds(&self) {}
 
-    #[payable("*")]
-    #[endpoint]
-    fn propose(&self, args: ProposalCreationArgs<Self::Api>) -> u64 {
+    #[endpoint(proposeNewTransfer)]
+    fn propose_new_transfer(
+        &self,
+        title: ManagedBuffer,
+        description: ManagedBuffer,
+        transfer_proposal: TransferProposal<Self::Api>,
+    ) -> u64 {
         require!(self.state().get() == State::Active, ERROR_NOT_ACTIVE);
 
-        let payment = self.call_value().single_esdt();
-        require!(payment.token_identifier == self.governance_token().get(), ERROR_INVALID_PAYMENT);
-        require!(payment.amount >= self.min_proposal_amount().get(), ERROR_NOT_ENOUGH_FUNDS_TO_PROPOSE);
+        let caller = self.blockchain().get_caller();
+        require!(self.board_members().contains(&caller), ERROR_ONLY_BOARD_MEMBERS);
 
         let proposal = Proposal {
             id: self.last_proposal_id().get(),
-            creation_block: self.blockchain().get_block_nonce(),
-            proposer: self.blockchain().get_caller(),
-            title: args.description,
+            proposal_data: ProposalType::NewTransfer(transfer_proposal),
+            proposal_type: ProposalTypeEnum::NewTransfer,
+            creation_timestamp: self.blockchain().get_block_timestamp(),
+            proposer: caller,
+            title,
+            description,
             status: ProposalStatus::Pending,
             was_executed: false,
-            action: args.action,
-            num_upvotes: payment.amount.clone(),
+            num_upvotes: BigUint::zero(),
             num_downvotes: BigUint::zero(),
         };
         self.proposals(proposal.id).set(&proposal);
         self.last_proposal_id().set(proposal.id + 1);
 
-        let caller = self.blockchain().get_caller();
-        self.proposal_voters(proposal.id).insert(caller.clone());
-        self.voter_proposals(&caller).insert(proposal.id);
-        self.voters_amounts(&caller, proposal.id).update(|value| *value += payment.amount);
-
         proposal.id
     }
 
     #[payable("*")]
-    #[endpoint]
+    #[endpoint(upvote)]
     fn upvote(&self, proposal_id: u64) {
         self.vote(proposal_id, VoteType::Upvote)
     }
 
     #[payable("*")]
-    #[endpoint]
+    #[endpoint(downvote)]
     fn downvote(&self, proposal_id: u64) {
         self.vote(proposal_id, VoteType::DownVote)
     }
@@ -111,22 +116,43 @@ common::config::ConfigModule
         require!(pstat == ProposalStatus::Active, ERROR_PROPOSAL_NOT_ACTIVE);
 
         let payment = self.call_value().single_esdt();
-        require!(payment.token_identifier == self.governance_token().get(), ERROR_INVALID_PAYMENT);
+        require!(self.voting_tokens().contains_key(&payment.token_identifier), ERROR_INVALID_PAYMENT);
         require!(payment.amount > 0, ERROR_ZERO_PAYMENT);
 
+        let vote_weight = payment.amount.clone() * self.voting_tokens().get(&payment.token_identifier).unwrap() / ONE;
         match vote_type {
-            VoteType::Upvote => proposal.num_upvotes += &payment.amount,
-            VoteType::DownVote => proposal.num_downvotes += &payment.amount,
+            VoteType::Upvote => proposal.num_upvotes += vote_weight.sqrt(),
+            VoteType::DownVote => proposal.num_downvotes += vote_weight.sqrt(),
         }
         self.proposals(proposal_id).set(&proposal);
 
         let caller = self.blockchain().get_caller();
         self.proposal_voters(proposal.id).insert(caller.clone());
         self.voter_proposals(&caller).insert(proposal.id);
-        self.voters_amounts(&caller, proposal.id).update(|value| *value += payment.amount);
+        
+        // update the amount of tokens voted by the caller
+        let mut new_vec: ManagedVec<EsdtTokenPayment> = ManagedVec::new();
+        let old_vec = self.voters_amounts(&caller, proposal.id).get();
+        let mut found = false;
+        for old_payment in old_vec.iter() {
+            if old_payment.token_identifier == payment.token_identifier && old_payment.token_nonce == payment.token_nonce {
+                new_vec.push(EsdtTokenPayment::new(
+                    payment.token_identifier.clone(),
+                    payment.token_nonce,
+                    &old_payment.amount + &payment.amount,
+                ));
+                found = true;
+            } else {
+                new_vec.push(old_payment.clone());
+            }
+        }
+        if !found {
+            new_vec.push(payment.clone());
+        }
+        self.voters_amounts(&caller, proposal.id).set(&new_vec);
     }
 
-    #[endpoint]
+    #[endpoint(redeem)]
     fn redeem(&self, proposal_id: u64) {
         let proposal = self.proposals(proposal_id).get();
         let pstat = self.get_proposal_status(&proposal);
@@ -136,18 +162,15 @@ common::config::ConfigModule
         );
 
         let caller = self.blockchain().get_caller();
-        let amount = self.voters_amounts(&caller, proposal_id).take();
+        let payments = self.voters_amounts(&caller, proposal_id).take();
         self.voter_proposals(&caller).swap_remove(&proposal_id);
         self.proposal_voters(proposal_id).swap_remove(&caller);
-        self.send().direct_esdt(
-            &caller,
-            &self.governance_token().get(),
-            0,
-            &amount,
-        );
+        require!(!payments.is_empty(), ERROR_NOTHING_TO_REDEEM);
+
+        self.send().direct_multi(&caller, &payments);
     }
 
-    #[endpoint]
+    #[endpoint(execute)]
     fn execute(&self, proposal_id: u64) {
         require!(self.state().get() == State::Active, ERROR_NOT_ACTIVE);
         require!(!self.proposals(proposal_id).is_empty(), ERROR_PROPOSAL_NOT_FOUND);
@@ -162,7 +185,15 @@ common::config::ConfigModule
     }
 
     fn execute_proposal(&self, proposal: &Proposal<Self::Api>) {
-        self.execute_action(&proposal.action).unwrap()
+        match proposal.proposal_data.clone() {
+            ProposalType::Nothing => return,
+
+            ProposalType::NewTransfer(transfer_proposal) => {
+                for action in transfer_proposal.actions.iter() {
+                    self.execute_action(&action).unwrap();
+                }
+            },
+        };
     }
 
     fn execute_action(&self, action: &Action<Self::Api>) -> Result<(), &'static [u8]> {

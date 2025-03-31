@@ -11,7 +11,7 @@ pub enum State {
 }
 
 #[type_abi]
-#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, ManagedVecItem)]
+#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, PartialEq, Clone, Debug, ManagedVecItem)]
 pub struct Action<M: ManagedTypeApi> {
     pub gas_limit: u64,
     pub dest_address: ManagedAddress<M>,
@@ -46,19 +46,41 @@ pub enum ProposalStatus {
 }
 
 #[type_abi]
-#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, ManagedVecItem)]
+#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, PartialEq, Debug, ManagedVecItem)]
+pub enum ProposalTypeEnum {
+    Nothing,
+
+    NewTransfer,
+}
+
+#[type_abi]
+#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, PartialEq, Clone, Debug)]
+pub enum ProposalType<M: ManagedTypeApi> {
+    Nothing,
+
+    NewTransfer(TransferProposal<M>),
+}
+
+#[type_abi]
+#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, PartialEq, Debug)]
 pub struct Proposal<M: ManagedTypeApi> {
     pub id: u64,
-    pub creation_block: u64,
+    pub proposal_data: ProposalType<M>,
+    pub proposal_type: ProposalTypeEnum,
+    pub creation_timestamp: u64,
     pub proposer: ManagedAddress<M>,
     pub title: ManagedBuffer<M>,
+    pub description: ManagedBuffer<M>,
     pub status: ProposalStatus,
-
     pub was_executed: bool,
-    pub action: Action<M>,
-
     pub num_upvotes: BigUint<M>,
     pub num_downvotes: BigUint<M>,
+}
+
+#[type_abi]
+#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, PartialEq, Clone, Debug)]
+pub struct TransferProposal<M: ManagedTypeApi> {
+    pub actions: ManagedVec<M, Action<M>>,
 }
 
 #[type_abi]
@@ -92,6 +114,7 @@ pub trait ConfigModule {
         require!(self.quorum().get() > 0, ERROR_QUORUM_NOT_SET);
         require!(self.voting_period().get() > 0, ERROR_VOTING_PERIOD_NOT_SET);
         require!(self.min_proposal_amount().get() > 0, ERROR_PROPOSAL_AMOUNT_NOT_SET);
+        require!(!self.voting_tokens().is_empty(), ERROR_NO_VOTING_TOKENS);
 
         self.state().set(State::Active);
     }
@@ -127,6 +150,11 @@ pub trait ConfigModule {
     #[view(getGovernanceToken)]
     #[storage_mapper("governance_token")]
     fn governance_token(&self) -> SingleValueMapper<TokenIdentifier>;
+
+    // voting tokens
+    #[view(getVotingTokens)]
+    #[storage_mapper("voting_tokens")]
+    fn voting_tokens(&self) -> MapMapper<TokenIdentifier, BigUint>;
 
     // min proposal amount
     #[endpoint(setMinProposalAmount)]
@@ -174,7 +202,7 @@ pub trait ConfigModule {
     // voters amounts
     #[view(getVoterAmount)]
     #[storage_mapper("voters_amounts")]
-    fn voters_amounts(&self, voter: &ManagedAddress, proposal_id: u64) -> SingleValueMapper<BigUint>;
+    fn voters_amounts(&self, voter: &ManagedAddress, proposal_id: u64) -> SingleValueMapper<ManagedVec<EsdtTokenPayment>>;
 
     // proposal voters
     #[view(getProposalVoters)]
@@ -212,13 +240,8 @@ pub trait ConfigModule {
 
     // view paginated proposals of certain type
     #[view(getProposals)]
-    fn get_proposals(&self, idx_from: u64, idx_to: u64, status: OptionalValue<ProposalStatus>) -> ManagedVec<Proposal<Self::Api>> {
-        let mut proposals: ManagedVec<Proposal<Self::Api>> = ManagedVec::new();
-        let all = status.is_none();
-        let filter_status = match status {
-            OptionalValue::Some(value) => value,
-            OptionalValue::None => ProposalStatus::Pending
-        };
+    fn get_proposals(&self, idx_from: u64, idx_to: u64, proposal_type: ProposalTypeEnum) -> MultiValueEncoded<Proposal<Self::Api>> {
+        let mut proposals = MultiValueEncoded::new();
         let mut real_idx: u64 = 0;
         for idx in 0..self.last_proposal_id().get() {
             if self.proposals(idx).is_empty() {
@@ -226,13 +249,12 @@ pub trait ConfigModule {
             }
 
             let mut proposal = self.proposals(idx).get();
-            let proposal_status = self.get_proposal_status(&proposal);
-            if !all && proposal_status != filter_status {
+            if proposal.proposal_type != proposal_type {
                 continue
             }
 
             if real_idx >= idx_from && real_idx <= idx_to {
-                proposal.status = proposal_status;
+                proposal.status = self.get_proposal_status(&proposal);
                 proposals.push(proposal);
             }
             real_idx += 1;
@@ -255,17 +277,17 @@ pub trait ConfigModule {
             return ProposalStatus::Executed;
         }
 
-        let current_block = self.blockchain().get_block_nonce();
-        let proposal_block = proposal.creation_block;
+        let current_timestamp = self.blockchain().get_block_timestamp();
+        let proposal_timestamp = proposal.creation_timestamp;
         let voting_period = self.voting_period().get();
 
-        let voting_start = proposal_block;
+        let voting_start = proposal_timestamp;
         let voting_end = voting_start + voting_period;
 
-        if current_block < voting_start {
+        if current_timestamp < voting_start {
             return ProposalStatus::Pending;
         }
-        if current_block >= voting_start && current_block < voting_end {
+        if current_timestamp >= voting_start && current_timestamp < voting_end {
             return ProposalStatus::Active;
         }
 

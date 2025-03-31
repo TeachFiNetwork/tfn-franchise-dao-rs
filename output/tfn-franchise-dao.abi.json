@@ -57,15 +57,20 @@
             "outputs": []
         },
         {
-            "name": "propose",
+            "name": "proposeNewTransfer",
             "mutability": "mutable",
-            "payableInTokens": [
-                "*"
-            ],
             "inputs": [
                 {
-                    "name": "args",
-                    "type": "ProposalCreationArgs"
+                    "name": "title",
+                    "type": "bytes"
+                },
+                {
+                    "name": "description",
+                    "type": "bytes"
+                },
+                {
+                    "name": "transfer_proposal",
+                    "type": "TransferProposal"
                 }
             ],
             "outputs": [
@@ -207,6 +212,17 @@
             ]
         },
         {
+            "name": "getVotingTokens",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "variadic<multi<TokenIdentifier,BigUint>>",
+                    "multi_result": true
+                }
+            ]
+        },
+        {
             "name": "setMinProposalAmount",
             "mutability": "mutable",
             "inputs": [
@@ -309,7 +325,7 @@
             ],
             "outputs": [
                 {
-                    "type": "BigUint"
+                    "type": "List<EsdtTokenPayment>"
                 }
             ]
         },
@@ -374,14 +390,14 @@
                     "type": "u64"
                 },
                 {
-                    "name": "status",
-                    "type": "optional<ProposalStatus>",
-                    "multi_arg": true
+                    "name": "proposal_type",
+                    "type": "ProposalTypeEnum"
                 }
             ],
             "outputs": [
                 {
-                    "type": "List<Proposal>"
+                    "type": "variadic<Proposal>",
+                    "multi_result": true
                 }
             ]
         },
@@ -670,6 +686,118 @@
                 }
             ],
             "outputs": []
+        },
+        {
+            "name": "getBoardMembers",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "variadic<Address>",
+                    "multi_result": true
+                }
+            ]
+        },
+        {
+            "name": "isBoardMember",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "getActions",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "variadic<BoardAction>",
+                    "multi_result": true
+                }
+            ]
+        },
+        {
+            "name": "getActionSignerIds",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "action_id",
+                    "type": "u32"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "variadic<Address>",
+                    "multi_result": true
+                }
+            ]
+        },
+        {
+            "name": "getBoardQuorum",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "u32"
+                }
+            ]
+        },
+        {
+            "name": "quorumReached",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "action_id",
+                    "type": "u32"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "signed",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "user",
+                    "type": "Address"
+                },
+                {
+                    "name": "action_id",
+                    "type": "u32"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "getActionValidSignerCount",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "action_id",
+                    "type": "u32"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "u32"
+                }
+            ]
         }
     ],
     "esdtAttributes": [],
@@ -701,6 +829,89 @@
                 {
                     "name": "arguments",
                     "type": "List<bytes>"
+                }
+            ]
+        },
+        "BoardAction": {
+            "type": "enum",
+            "variants": [
+                {
+                    "name": "Nothing",
+                    "discriminant": 0
+                },
+                {
+                    "name": "AddBoardMember",
+                    "discriminant": 1,
+                    "fields": [
+                        {
+                            "name": "0",
+                            "type": "Address"
+                        }
+                    ]
+                },
+                {
+                    "name": "RemoveBoardMember",
+                    "discriminant": 2,
+                    "fields": [
+                        {
+                            "name": "0",
+                            "type": "Address"
+                        }
+                    ]
+                },
+                {
+                    "name": "ChangeBoardQuorum",
+                    "discriminant": 3,
+                    "fields": [
+                        {
+                            "name": "0",
+                            "type": "u32"
+                        }
+                    ]
+                },
+                {
+                    "name": "ChangeQuorum",
+                    "discriminant": 4,
+                    "fields": [
+                        {
+                            "name": "0",
+                            "type": "BigUint"
+                        }
+                    ]
+                },
+                {
+                    "name": "ChangeVotingPeriod",
+                    "discriminant": 5,
+                    "fields": [
+                        {
+                            "name": "0",
+                            "type": "u64"
+                        }
+                    ]
+                },
+                {
+                    "name": "AddVotingToken",
+                    "discriminant": 6,
+                    "fields": [
+                        {
+                            "name": "0",
+                            "type": "TokenIdentifier"
+                        },
+                        {
+                            "name": "1",
+                            "type": "BigUint"
+                        }
+                    ]
+                },
+                {
+                    "name": "RemoveVotingToken",
+                    "discriminant": 7,
+                    "fields": [
+                        {
+                            "name": "0",
+                            "type": "TokenIdentifier"
+                        }
+                    ]
                 }
             ]
         },
@@ -799,6 +1010,23 @@
                 }
             ]
         },
+        "EsdtTokenPayment": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "token_identifier",
+                    "type": "TokenIdentifier"
+                },
+                {
+                    "name": "token_nonce",
+                    "type": "u64"
+                },
+                {
+                    "name": "amount",
+                    "type": "BigUint"
+                }
+            ]
+        },
         "Proposal": {
             "type": "struct",
             "fields": [
@@ -807,7 +1035,15 @@
                     "type": "u64"
                 },
                 {
-                    "name": "creation_block",
+                    "name": "proposal_data",
+                    "type": "ProposalType"
+                },
+                {
+                    "name": "proposal_type",
+                    "type": "ProposalTypeEnum"
+                },
+                {
+                    "name": "creation_timestamp",
                     "type": "u64"
                 },
                 {
@@ -819,6 +1055,10 @@
                     "type": "bytes"
                 },
                 {
+                    "name": "description",
+                    "type": "bytes"
+                },
+                {
                     "name": "status",
                     "type": "ProposalStatus"
                 },
@@ -827,29 +1067,12 @@
                     "type": "bool"
                 },
                 {
-                    "name": "action",
-                    "type": "Action"
-                },
-                {
                     "name": "num_upvotes",
                     "type": "BigUint"
                 },
                 {
                     "name": "num_downvotes",
                     "type": "BigUint"
-                }
-            ]
-        },
-        "ProposalCreationArgs": {
-            "type": "struct",
-            "fields": [
-                {
-                    "name": "description",
-                    "type": "bytes"
-                },
-                {
-                    "name": "action",
-                    "type": "Action"
                 }
             ]
         },
@@ -875,6 +1098,38 @@
                 {
                     "name": "Executed",
                     "discriminant": 4
+                }
+            ]
+        },
+        "ProposalType": {
+            "type": "enum",
+            "variants": [
+                {
+                    "name": "Nothing",
+                    "discriminant": 0
+                },
+                {
+                    "name": "NewTransfer",
+                    "discriminant": 1,
+                    "fields": [
+                        {
+                            "name": "0",
+                            "type": "TransferProposal"
+                        }
+                    ]
+                }
+            ]
+        },
+        "ProposalTypeEnum": {
+            "type": "enum",
+            "variants": [
+                {
+                    "name": "Nothing",
+                    "discriminant": 0
+                },
+                {
+                    "name": "NewTransfer",
+                    "discriminant": 1
                 }
             ]
         },
@@ -942,6 +1197,15 @@
                 {
                     "name": "teacher_id",
                     "type": "u64"
+                }
+            ]
+        },
+        "TransferProposal": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "actions",
+                    "type": "List<Action>"
                 }
             ]
         }

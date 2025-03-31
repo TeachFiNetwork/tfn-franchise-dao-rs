@@ -14,3 +14,6 @@ pub static ERROR_STUDENT_NOT_FOUND: &[u8] = b"student not found";
 pub static ERROR_EMPLOYEE_NOT_FOUND: &[u8] = b"employee not found";
 pub static ERROR_CLASS_NOT_FOUND: &[u8] = b"class not found";
 pub static ERROR_CLASS_NOT_EMPTY: &[u8] = b"class has students";
+pub static ERROR_ONLY_BOARD_MEMBERS: &[u8] = b"only board members";
+pub static ERROR_NO_VOTING_TOKENS: &[u8] = b"no voting tokens set";
+pub static ERROR_NOTHING_TO_REDEEM: &[u8] = b"nothing to redeem";
