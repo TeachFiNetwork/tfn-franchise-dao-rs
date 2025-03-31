@@ -54,12 +54,6 @@ common::config::ConfigModule
     fn upgrade(&self) {
     }
 
-    #[only_owner]
-    #[endpoint(changeOwner)]
-    fn change_owner(&self, new_owner: ManagedAddress) {
-        self.owner().set(new_owner);
-    }
-
     #[payable("*")]
     #[endpoint(addFunds)]
     fn add_funds(&self) {}

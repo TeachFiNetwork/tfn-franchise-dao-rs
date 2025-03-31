@@ -8,6 +8,7 @@ use crate::proxies::launchpad_proxy::{self};
 pub trait MultisigModule:
 crate::common::board_config::BoardConfigModule
 + crate::common::config::ConfigModule
++ crate::common::school_config::SchoolConfigModule
 {
     #[endpoint]
     fn sign(&self, action_id: usize) {
@@ -97,6 +98,11 @@ crate::common::board_config::BoardConfigModule
         self.propose_action(BoardAction::RemoveVotingToken(token))
     }
 
+    #[endpoint(proposeChangeTaxAmount)]
+    fn propose_change_tax_amount(&self, new_tax_amount: BigUint) -> usize {
+        self.propose_action(BoardAction::ChangeTaxAmount(new_tax_amount))
+    }
+
     #[endpoint(performAction)]
     fn perform_action_endpoint(&self, action_id: usize) {
         let caller = self.blockchain().get_caller();
@@ -138,6 +144,9 @@ crate::common::board_config::BoardConfigModule
                 if self.voting_tokens().is_empty() {
                     self.set_state_inactive();
                 }
+            },
+            BoardAction::ChangeTaxAmount(new_tax_amount) => {
+                self.tax_amount().set(new_tax_amount);
             },
         };
     }

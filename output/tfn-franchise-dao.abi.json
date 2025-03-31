@@ -36,18 +36,6 @@
     },
     "endpoints": [
         {
-            "name": "changeOwner",
-            "onlyOwner": true,
-            "mutability": "mutable",
-            "inputs": [
-                {
-                    "name": "new_owner",
-                    "type": "Address"
-                }
-            ],
-            "outputs": []
-        },
-        {
             "name": "addFunds",
             "mutability": "mutable",
             "payableInTokens": [
@@ -910,6 +898,16 @@
                         {
                             "name": "0",
                             "type": "TokenIdentifier"
+                        }
+                    ]
+                },
+                {
+                    "name": "ChangeTaxAmount",
+                    "discriminant": 8,
+                    "fields": [
+                        {
+                            "name": "0",
+                            "type": "BigUint"
                         }
                     ]
                 }
