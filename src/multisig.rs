@@ -59,26 +59,36 @@ crate::common::board_config::BoardConfigModule
 
     #[endpoint(proposeAddBoardMember)]
     fn propose_add_board_member(&self, board_member_address: ManagedAddress) -> usize {
+        require!(!self.board_members().contains(&board_member_address), ERROR_ALREADY_BOARD_MEMBER);
+
         self.propose_action(BoardAction::AddBoardMember(board_member_address))
     }
 
     #[endpoint(proposeRemoveUser)]
     fn propose_remove_user(&self, user_address: ManagedAddress) -> usize {
+        require!(self.board_members().contains(&user_address), ERROR_NOT_BOARD_MEMBER);
+
         self.propose_action(BoardAction::RemoveBoardMember(user_address))
     }
 
     #[endpoint(proposeChangeBoardQuorum)]
     fn propose_change_board_quorum(&self, new_quorum: usize) -> usize {
+        require!(new_quorum > 0, ERROR_ZERO_VALUE);
+
         self.propose_action(BoardAction::ChangeBoardQuorum(new_quorum))
     }
 
     #[endpoint(proposeChangeQuorum)]
     fn propose_change_quorum(&self, new_quorum: BigUint) -> usize {
+        require!(new_quorum > 0, ERROR_ZERO_VALUE);
+
         self.propose_action(BoardAction::ChangeQuorum(new_quorum))
     }
 
     #[endpoint(proposeChangeVotingPeriod)]
     fn propose_change_vorint_period(&self, new_period: u64) -> usize {
+        require!(new_period > 0, ERROR_ZERO_VALUE);
+
         self.propose_action(BoardAction::ChangeVotingPeriod(new_period))
     }
 
@@ -88,16 +98,23 @@ crate::common::board_config::BoardConfigModule
         token: TokenIdentifier,
         weight: BigUint,
     ) -> usize {
+        require!(!self.voting_tokens().contains_key(&token), ERROR_TOKEN_ALREADY_EXISTS);
+        require!(weight > 0, ERROR_ZERO_VALUE);
+
         self.propose_action(BoardAction::AddVotingToken(token, weight))
     }
 
     #[endpoint(proposeRemoveVotingToken)]
     fn propose_remove_voting_token(&self, token: TokenIdentifier) -> usize {
+        require!(self.voting_tokens().contains_key(&token), ERROR_TOKEN_NOT_FOUND);
+
         self.propose_action(BoardAction::RemoveVotingToken(token))
     }
 
     #[endpoint(proposeChangeTaxAmount)]
     fn propose_change_tax_amount(&self, new_tax_amount: BigUint) -> usize {
+        require!(new_tax_amount > 0, ERROR_ZERO_VALUE);
+
         self.propose_action(BoardAction::ChangeTaxAmount(new_tax_amount))
     }
 
