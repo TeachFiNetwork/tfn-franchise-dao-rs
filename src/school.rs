@@ -46,6 +46,16 @@ school_config::SchoolConfigModule
         self.classes(class_id).set(class);
     }
 
+    #[endpoint(deleteClass)]
+    fn delete_class(&self, class_id: u64) {
+        require!(self.state().get() == State::Active, ERROR_NOT_ACTIVE);
+        self.only_owner();
+        require!(!self.classes(class_id).is_empty(), ERROR_CLASS_NOT_FOUND);
+        require!(self.get_class_students(class_id).is_empty(), ERROR_CLASS_NOT_EMPTY);
+
+        self.classes(class_id).clear();
+    }
+
     #[endpoint(setClassSchedule)]
     fn set_class_schedule(&self, class_id: u64, schedule: ManagedVec<Self::Api, SubjectSlot<Self::Api>>) {
         require!(self.state().get() == State::Active, ERROR_NOT_ACTIVE);
@@ -212,6 +222,17 @@ school_config::SchoolConfigModule
             .contract(employee.sc.clone())
             .set_state_active()
             .execute_on_dest_context::<()>();
+    }
+
+    #[endpoint(changeEmployeeWallet)]
+    fn change_employee_wallet(&self, employee_id: u64, new_wallet: ManagedAddress) {
+        require!(self.state().get() == State::Active, ERROR_NOT_ACTIVE);
+        self.only_owner();
+        require!(!self.employees(employee_id).is_empty(), ERROR_EMPLOYEE_NOT_FOUND);
+
+        let mut employee = self.employees(employee_id).get();
+        employee.wallet = new_wallet;
+        self.employees(employee_id).set(&employee);
     }
 
     // proxies
