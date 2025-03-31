@@ -118,16 +118,6 @@
             "outputs": []
         },
         {
-            "name": "getOwner",
-            "mutability": "readonly",
-            "inputs": [],
-            "outputs": [
-                {
-                    "type": "Address"
-                }
-            ]
-        },
-        {
             "name": "setStateActive",
             "mutability": "mutable",
             "inputs": [],
@@ -786,6 +776,350 @@
                     "type": "u32"
                 }
             ]
+        },
+        {
+            "name": "createClass",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "year",
+                    "type": "u32"
+                },
+                {
+                    "name": "name",
+                    "type": "bytes"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "editClass",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "class_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "year",
+                    "type": "u32"
+                },
+                {
+                    "name": "name",
+                    "type": "bytes"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "deleteClass",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "class_id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "setClassSchedule",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "class_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "schedule",
+                    "type": "List<SubjectSlot>"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "enrollStudent",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "name",
+                    "type": "bytes"
+                },
+                {
+                    "name": "class_id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "expellStudent",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "student_id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "reEnrollStudent",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "class_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "sc",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "changeStudentWallet",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "student_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "new_wallet",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "hireEmployee",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "name",
+                    "type": "bytes"
+                },
+                {
+                    "name": "is_teacher",
+                    "type": "bool"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "fireEmployee",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "employee_id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "reHireEmployee",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "sc",
+                    "type": "Address"
+                },
+                {
+                    "name": "is_teacher",
+                    "type": "bool"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "changeEmployeeWallet",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "employee_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "new_wallet",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "sign",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "action_id",
+                    "type": "u32"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "unsign",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "action_id",
+                    "type": "u32"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "discardAction",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "action_id",
+                    "type": "u32"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "proposeAddBoardMember",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "board_member_address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "u32"
+                }
+            ]
+        },
+        {
+            "name": "proposeRemoveUser",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "user_address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "u32"
+                }
+            ]
+        },
+        {
+            "name": "proposeChangeBoardQuorum",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "new_quorum",
+                    "type": "u32"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "u32"
+                }
+            ]
+        },
+        {
+            "name": "proposeChangeQuorum",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "new_quorum",
+                    "type": "BigUint"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "u32"
+                }
+            ]
+        },
+        {
+            "name": "proposeChangeVotingPeriod",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "new_period",
+                    "type": "u64"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "u32"
+                }
+            ]
+        },
+        {
+            "name": "proposeAddVotingToken",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "token",
+                    "type": "TokenIdentifier"
+                },
+                {
+                    "name": "weight",
+                    "type": "BigUint"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "u32"
+                }
+            ]
+        },
+        {
+            "name": "proposeRemoveVotingToken",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "token",
+                    "type": "TokenIdentifier"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "u32"
+                }
+            ]
+        },
+        {
+            "name": "proposeChangeTaxAmount",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "new_tax_amount",
+                    "type": "BigUint"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "u32"
+                }
+            ]
+        },
+        {
+            "name": "performAction",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "action_id",
+                    "type": "u32"
+                }
+            ],
+            "outputs": []
         }
     ],
     "esdtAttributes": [],
@@ -942,10 +1276,6 @@
                     "type": "State"
                 },
                 {
-                    "name": "owner",
-                    "type": "Address"
-                },
-                {
                     "name": "governance_token",
                     "type": "TokenIdentifier"
                 },
@@ -963,14 +1293,6 @@
                 },
                 {
                     "name": "main_dao",
-                    "type": "Address"
-                },
-                {
-                    "name": "template_employee",
-                    "type": "Address"
-                },
-                {
-                    "name": "template_student",
                     "type": "Address"
                 },
                 {

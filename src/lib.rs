@@ -15,6 +15,8 @@ pub trait TFNFranchiseDAOContract<ContractReader>:
 common::config::ConfigModule
 +common::school_config::SchoolConfigModule
 +common::board_config::BoardConfigModule
++school::SchoolModule
++multisig::MultisigModule
 {
     #[init]
     fn init(
@@ -22,7 +24,6 @@ common::config::ConfigModule
         owner: &ManagedAddress,
         token: &TokenIdentifier,
     ) {
-        self.owner().set(owner);
         self.governance_token().set(token);
         let caller = self.blockchain().get_caller();
         let main_dao: ManagedAddress = self.launchpad_contract_proxy()

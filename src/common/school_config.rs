@@ -2,6 +2,7 @@ multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
 use crate::common::errors::*;
+use super::board_config;
 
 #[type_abi]
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, ManagedVecItem, PartialEq, Eq, Clone, Debug)]
@@ -45,6 +46,7 @@ pub struct Class<M: ManagedTypeApi> {
 #[multiversx_sc::module]
 pub trait SchoolConfigModule:
 super::config::ConfigModule
++board_config::BoardConfigModule
 {
     // classes
     #[view(getClass)]
@@ -259,7 +261,7 @@ super::config::ConfigModule
 
     #[endpoint(setTaxAmount)]
     fn set_tax_amount(&self, new_tax_amount: BigUint) {
-        self.only_owner();
+        self.only_board_members();
 
         self.tax_amount().set(new_tax_amount);
     }

@@ -2,6 +2,7 @@ multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
 use crate::common::errors::*;
+use super::board_config;
 
 #[type_abi]
 #[derive(ManagedVecItem, TopEncode, TopDecode, NestedEncode, NestedDecode, PartialEq, Eq, Copy, Clone, Debug)]
@@ -87,30 +88,25 @@ pub struct TransferProposal<M: ManagedTypeApi> {
 #[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, ManagedVecItem)]
 pub struct ContractInfo<M: ManagedTypeApi> {
     pub state: State,
-    pub owner: ManagedAddress<M>,
     pub governance_token: TokenIdentifier<M>,
-    pub quorum: BigUint<M>,
+    pub voting_tokens: ManagedVec<M, TokenIdentifier<M>>,
+    pub voting_token_weights: ManagedVec<M, BigUint<M>>,
     pub voting_period: u64,
-    pub min_proposal_amount: BigUint<M>,
-    pub main_dao: ManagedAddress<M>,
-    pub template_employee: ManagedAddress<M>,
-    pub template_student: ManagedAddress<M>,
-    pub platform: ManagedAddress<M>,
-    pub proposals_count: u64,
+    pub quorum: BigUint<M>,
+    pub board_quorum: usize,
+    pub board_members: ManagedVec<M, ManagedAddress<M>>,
     pub last_proposal_id: u64,
+    pub proposals_count: u64,
 }
 
 #[multiversx_sc::module]
-pub trait ConfigModule {
-    // owner
-    #[view(getOwner)]
-    #[storage_mapper("owner")]
-    fn owner(&self) -> SingleValueMapper<ManagedAddress>;
-
+pub trait ConfigModule:
+board_config::BoardConfigModule
+{
     // state
     #[endpoint(setStateActive)]
     fn set_state_active(&self) {
-        self.only_owner();
+        self.only_board_members();
         require!(self.quorum().get() > 0, ERROR_QUORUM_NOT_SET);
         require!(self.voting_period().get() > 0, ERROR_VOTING_PERIOD_NOT_SET);
         require!(self.min_proposal_amount().get() > 0, ERROR_PROPOSAL_AMOUNT_NOT_SET);
@@ -121,7 +117,7 @@ pub trait ConfigModule {
 
     #[endpoint(setStateInactive)]
     fn set_state_inactive(&self) {
-        self.only_owner();
+        self.only_board_members();
         self.state().set(State::Inactive);
     }
 
@@ -159,7 +155,7 @@ pub trait ConfigModule {
     // min proposal amount
     #[endpoint(setMinProposalAmount)]
     fn set_min_proposal_amount(&self, amount: &BigUint) {
-        self.only_owner();
+        self.only_board_members();
         self.min_proposal_amount().set(amount);
     }
 
@@ -170,7 +166,7 @@ pub trait ConfigModule {
     // voting period (blocks)
     #[endpoint(setVotingPeriod)]
     fn set_voting_period(&self, period: u64) {
-        self.only_owner();
+        self.only_board_members();
         self.voting_period().set(period);
     }
 
@@ -181,7 +177,7 @@ pub trait ConfigModule {
     // quorum
     #[endpoint(setQuorum)]
     fn set_quorum(&self, quorum: &BigUint) {
-        self.only_owner();
+        self.only_board_members();
         self.quorum().set(quorum);
     }
 
@@ -304,28 +300,41 @@ pub trait ConfigModule {
 
     #[view(getContractInfo)]
     fn get_contract_info(&self) -> ContractInfo<Self::Api> {
+        let state = self.state().get();
+        let governance_token = self.governance_token().get();
+        let mut voting_tokens = ManagedVec::new();
+        let mut voting_token_weights = ManagedVec::new();
+        for (token, weight) in self.voting_tokens().iter() {
+            voting_tokens.push(token);
+            voting_token_weights.push(weight);
+        }
+        let voting_period = self.voting_period().get();
+        let quorum = self.quorum().get();
+        let board_quorum = self.board_quorum().get();
+        let mut board_members = ManagedVec::new();
+        for member in self.board_members().into_iter() {
+            board_members.push(member);
+        }
+        let last_proposal_id = self.last_proposal_id().get();
+        let proposals_count = self.get_proposals_count(OptionalValue::None);
+
         ContractInfo {
-            state: self.state().get(),
-            owner: self.owner().get(),
-            governance_token: self.governance_token().get(),
-            quorum: self.quorum().get(),
-            voting_period: self.voting_period().get(),
-            min_proposal_amount: self.min_proposal_amount().get(),
-            main_dao: self.main_dao().get(),
-            template_employee: self.template_employee().get(),
-            template_student: self.template_student().get(),
-            platform: self.platform().get(),
-            proposals_count: self.get_proposals_count(OptionalValue::None),
-            last_proposal_id: self.last_proposal_id().get(),
+            state,
+            governance_token,
+            voting_tokens,
+            voting_token_weights,
+            voting_period,
+            quorum,
+            board_quorum,
+            board_members,
+            last_proposal_id,
+            proposals_count,
         }
     }
 
     // helpers
-    fn only_owner(&self) {
+    fn only_board_members(&self) {
         let caller = self.blockchain().get_caller();
-        require!(
-            caller == self.owner().get() || caller == self.blockchain().get_owner_address(),
-            ERROR_ONLY_OWNER
-        );
+        require!(self.board_members().contains(&caller), ERROR_ONLY_BOARD_MEMBERS);
     }
 }
