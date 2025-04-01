@@ -26,6 +26,10 @@ common::config::ConfigModule
     ) {
         self.governance_token().set(token);
         let caller = self.blockchain().get_caller();
+        if !self.blockchain().is_smart_contract(&caller) {
+            return
+        }
+
         let main_dao: ManagedAddress = self.launchpad_contract_proxy()
             .contract(caller.clone())
             .main_dao()
