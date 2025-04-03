@@ -34,22 +34,7 @@ common::config::ConfigModule
             .contract(caller.clone())
             .main_dao()
             .execute_on_dest_context();
-        let template_employee: ManagedAddress = self.launchpad_contract_proxy()
-            .contract(caller.clone())
-            .template_employee()
-            .execute_on_dest_context();
-        let template_student: ManagedAddress = self.launchpad_contract_proxy()
-            .contract(caller.clone())
-            .template_student()
-            .execute_on_dest_context();
-        let platform: ManagedAddress = self.launchpad_contract_proxy()
-            .contract(caller)
-            .platform()
-            .execute_on_dest_context();
         self.main_dao().set(main_dao);
-        self.template_employee().set(template_employee);
-        self.template_student().set(template_student);
-        self.platform().set(platform);
 
         self.board_members().insert(owner.clone());
         self.voting_tokens().insert(token.clone(), BigUint::from(ONE));

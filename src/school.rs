@@ -5,6 +5,7 @@ use crate::common::school_config::{self, *};
 use crate::common::config::{self, State};
 use crate::common::board_config;
 
+use tfn_dao::common::config::ProxyTrait as _;
 use tfn_employee::ProxyTrait as EmployeeProxy;
 use tfn_employee::common::config::ProxyTrait as _;
 use tfn_student::ProxyTrait as StudentProxy;
@@ -75,10 +76,14 @@ school_config::SchoolConfigModule
         require!(self.state().get() == State::Active, ERROR_NOT_ACTIVE);
         self.only_board_members();
 
+        let template_student = self.dao_contract_proxy()
+            .contract(self.main_dao().get())
+            .template_student()
+            .execute_on_dest_context();
         let (new_address, ()) = self.student_contract_proxy()
             .init(name)
             .deploy_from_source(
-                &self.template_student().get(),
+                &template_student,
                 CodeMetadata::UPGRADEABLE | CodeMetadata::READABLE | CodeMetadata::PAYABLE_BY_SC,
             );
         let student = Student {
@@ -173,10 +178,14 @@ school_config::SchoolConfigModule
         require!(self.state().get() == State::Active, ERROR_NOT_ACTIVE);
         self.only_board_members();
 
+        let template_employee = self.dao_contract_proxy()
+            .contract(self.main_dao().get())
+            .template_employee()
+            .execute_on_dest_context();
         let (new_address, ()) = self.employee_contract_proxy()
             .init(name)
             .deploy_from_source(
-                &self.template_employee().get(),
+                &template_employee,
                 CodeMetadata::UPGRADEABLE | CodeMetadata::READABLE | CodeMetadata::PAYABLE_BY_SC,
             );
         let employee = Employee {
@@ -238,6 +247,9 @@ school_config::SchoolConfigModule
     }
 
     // proxies
+    #[proxy]
+    fn dao_contract_proxy(&self) -> tfn_dao::Proxy<Self::Api>;
+
     #[proxy]
     fn employee_contract_proxy(&self) -> tfn_employee::Proxy<Self::Api>;
 

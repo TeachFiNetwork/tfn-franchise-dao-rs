@@ -150,26 +150,6 @@
             ]
         },
         {
-            "name": "getTemplateEmployee",
-            "mutability": "readonly",
-            "inputs": [],
-            "outputs": [
-                {
-                    "type": "Address"
-                }
-            ]
-        },
-        {
-            "name": "getTemplateStudent",
-            "mutability": "readonly",
-            "inputs": [],
-            "outputs": [
-                {
-                    "type": "Address"
-                }
-            ]
-        },
-        {
             "name": "getPlatform",
             "mutability": "readonly",
             "inputs": [],
