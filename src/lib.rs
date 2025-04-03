@@ -8,6 +8,7 @@ pub mod proxies;
 pub mod multisig;
 
 use common::{config::*, consts::*, errors::*};
+use tfn_dao::common::config::ProxyTrait as _;
 use crate::proxies::launchpad_proxy::{self};
 
 #[multiversx_sc::contract]
@@ -34,7 +35,13 @@ common::config::ConfigModule
             .contract(caller.clone())
             .main_dao()
             .execute_on_dest_context();
-        self.main_dao().set(main_dao);
+        self.main_dao().set(&main_dao);
+
+        let platform: ManagedAddress = self.dao_contract_proxy()
+            .contract(main_dao)
+            .platform_sc()
+            .execute_on_dest_context();
+        self.platform_sc().set(&platform);
 
         self.board_members().insert(owner.clone());
         self.voting_tokens().insert(token.clone(), BigUint::from(ONE));

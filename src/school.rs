@@ -21,7 +21,7 @@ school_config::SchoolConfigModule
 {
     // classes endpoints
     #[endpoint(createClass)]
-    fn create_class(&self, year: usize, name: ManagedBuffer<Self::Api>) -> u64{
+    fn create_class(&self, year: usize, name: ManagedBuffer<Self::Api>) -> u64 {
         require!(self.state().get() == State::Active, ERROR_NOT_ACTIVE);
         self.only_board_members();
 
@@ -73,7 +73,7 @@ school_config::SchoolConfigModule
 
     // students endpoints
     #[endpoint(enrollStudent)]
-    fn enroll_student(&self, name: ManagedBuffer, class_id: u64) {
+    fn enroll_student(&self, name: ManagedBuffer, class_id: u64) -> ManagedAddress {
         require!(self.state().get() == State::Active, ERROR_NOT_ACTIVE);
         self.only_board_members();
 
@@ -89,7 +89,7 @@ school_config::SchoolConfigModule
             );
         let student = Student {
             id: self.last_student_id().get(),
-            sc: new_address,
+            sc: new_address.clone(),
             wallet: ManagedAddress::zero(),
             class_id,
             tax_validity: 0,
@@ -98,9 +98,11 @@ school_config::SchoolConfigModule
         self.last_student_id().set(student.id + 1);
 
         self.platform_contract_proxy()
-            .contract(self.platform().get())
+            .contract(self.platform_sc().get())
             .whitelist_address(student.sc)
             .execute_on_dest_context::<()>();
+
+        new_address
     }
 
     #[endpoint(expellStudent)]
@@ -117,12 +119,12 @@ school_config::SchoolConfigModule
         self.students(student_id).clear();
 
         self.platform_contract_proxy()
-            .contract(self.platform().get())
+            .contract(self.platform_sc().get())
             .remove_address(student.sc)
             .execute_on_dest_context::<()>();
         if student.wallet != ManagedAddress::zero() {
             self.platform_contract_proxy()
-                .contract(self.platform().get())
+                .contract(self.platform_sc().get())
                 .remove_address(student.wallet)
                 .execute_on_dest_context::<()>();
         }
@@ -151,12 +153,12 @@ school_config::SchoolConfigModule
             .set_state_active()
             .execute_on_dest_context::<()>();
         self.platform_contract_proxy()
-            .contract(self.platform().get())
+            .contract(self.platform_sc().get())
             .whitelist_address(student.sc)
             .execute_on_dest_context::<()>();
         if wallet != ManagedAddress::zero() {
             self.platform_contract_proxy()
-                .contract(self.platform().get())
+                .contract(self.platform_sc().get())
                 .whitelist_address(wallet)
                 .execute_on_dest_context::<()>();
         }
@@ -175,7 +177,7 @@ school_config::SchoolConfigModule
 
     // employees endpoints
     #[endpoint(hireEmployee)]
-    fn hire_employee(&self, name: ManagedBuffer, is_teacher: bool) {
+    fn hire_employee(&self, name: ManagedBuffer, is_teacher: bool) -> ManagedAddress {
         require!(self.state().get() == State::Active, ERROR_NOT_ACTIVE);
         self.only_board_members();
 
@@ -191,12 +193,14 @@ school_config::SchoolConfigModule
             );
         let employee = Employee {
             id: self.last_employee_id().get(),
-            sc: new_address,
+            sc: new_address.clone(),
             wallet: ManagedAddress::zero(),
             is_teacher,
         };
         self.employees(employee.id).set(&employee);
         self.last_employee_id().set(employee.id + 1);
+
+        new_address
     }
 
     #[endpoint(fireEmployee)]

@@ -109,7 +109,6 @@ board_config::BoardConfigModule
         self.only_board_members();
         require!(self.quorum().get() > 0, ERROR_QUORUM_NOT_SET);
         require!(self.voting_period().get() > 0, ERROR_VOTING_PERIOD_NOT_SET);
-        require!(self.min_proposal_amount().get() > 0, ERROR_PROPOSAL_AMOUNT_NOT_SET);
         require!(!self.voting_tokens().is_empty(), ERROR_NO_VOTING_TOKENS);
 
         self.state().set(State::Active);
@@ -132,7 +131,7 @@ board_config::BoardConfigModule
 
     #[view(getPlatform)]
     #[storage_mapper("platform")]
-    fn platform(&self) -> SingleValueMapper<ManagedAddress>;
+    fn platform_sc(&self) -> SingleValueMapper<ManagedAddress>;
 
     // governance token
     #[view(getGovernanceToken)]
@@ -143,17 +142,6 @@ board_config::BoardConfigModule
     #[view(getVotingTokens)]
     #[storage_mapper("voting_tokens")]
     fn voting_tokens(&self) -> MapMapper<TokenIdentifier, BigUint>;
-
-    // min proposal amount
-    #[endpoint(setMinProposalAmount)]
-    fn set_min_proposal_amount(&self, amount: &BigUint) {
-        self.only_board_members();
-        self.min_proposal_amount().set(amount);
-    }
-
-    #[view(getMinProposalAmount)]
-    #[storage_mapper("min_proposal_amount")]
-    fn min_proposal_amount(&self) -> SingleValueMapper<BigUint>;
 
     // voting period (blocks)
     #[endpoint(setVotingPeriod)]

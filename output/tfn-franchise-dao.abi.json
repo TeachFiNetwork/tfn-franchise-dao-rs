@@ -181,27 +181,6 @@
             ]
         },
         {
-            "name": "setMinProposalAmount",
-            "mutability": "mutable",
-            "inputs": [
-                {
-                    "name": "amount",
-                    "type": "BigUint"
-                }
-            ],
-            "outputs": []
-        },
-        {
-            "name": "getMinProposalAmount",
-            "mutability": "readonly",
-            "inputs": [],
-            "outputs": [
-                {
-                    "type": "BigUint"
-                }
-            ]
-        },
-        {
             "name": "setVotingPeriod",
             "mutability": "mutable",
             "inputs": [
@@ -864,7 +843,11 @@
                     "type": "u64"
                 }
             ],
-            "outputs": []
+            "outputs": [
+                {
+                    "type": "Address"
+                }
+            ]
         },
         {
             "name": "expellStudent",
@@ -920,7 +903,11 @@
                     "type": "bool"
                 }
             ],
-            "outputs": []
+            "outputs": [
+                {
+                    "type": "Address"
+                }
+            ]
         },
         {
             "name": "fireEmployee",
