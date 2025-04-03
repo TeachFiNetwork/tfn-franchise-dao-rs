@@ -6,6 +6,7 @@ use crate::common::config::{self, State};
 use crate::common::board_config;
 
 use tfn_dao::common::config::ProxyTrait as _;
+use tfn_dao::common::board_config::ProxyTrait as _;
 use tfn_employee::ProxyTrait as EmployeeProxy;
 use tfn_employee::common::config::ProxyTrait as _;
 use tfn_student::ProxyTrait as StudentProxy;
@@ -256,7 +257,8 @@ school_config::SchoolConfigModule
         let student = self.get_student_by_wallet_or_address(address);
         require!(student.is_some(), ERROR_STUDENT_NOT_FOUND);
 
-        if self.blockchain().get_caller() != student.clone().unwrap().wallet {
+        let caller = self.blockchain().get_caller();
+        if caller != student.clone().unwrap().wallet && !self.is_dao_board_member(&caller) {
             self.only_board_members();
         }
 
@@ -287,7 +289,8 @@ school_config::SchoolConfigModule
         let employee = self.get_employee_by_wallet_or_address(address);
         require!(employee.is_some(), ERROR_EMPLOYEE_NOT_FOUND);
 
-        if self.blockchain().get_caller() != employee.clone().unwrap().wallet {
+        let caller = self.blockchain().get_caller();
+        if caller != employee.clone().unwrap().wallet && !self.is_dao_board_member(&caller) {
             self.only_board_members();
         }
 
@@ -307,6 +310,14 @@ school_config::SchoolConfigModule
             .from_source(template_employee)
             .code_metadata(CodeMetadata::UPGRADEABLE | CodeMetadata::READABLE | CodeMetadata::PAYABLE_BY_SC)
             .upgrade_async_call_and_exit();
+    }
+
+    // helpers
+    fn is_dao_board_member(&self, address: &ManagedAddress) -> bool {
+        self.dao_contract_proxy()
+            .contract(self.main_dao().get())
+            .is_board_member(address)
+            .execute_on_dest_context()
     }
 
     // proxies
