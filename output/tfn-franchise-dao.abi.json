@@ -550,6 +550,21 @@
             ]
         },
         {
+            "name": "getEmployeeByWalletOrAddress",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "Option<Employee>"
+                }
+            ]
+        },
+        {
             "name": "getStudent",
             "mutability": "readonly",
             "inputs": [
@@ -611,6 +626,21 @@
         },
         {
             "name": "getStudentByWallet",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "Option<Student>"
+                }
+            ]
+        },
+        {
+            "name": "getStudentByWalletOrAddress",
             "mutability": "readonly",
             "inputs": [
                 {
@@ -929,6 +959,38 @@
                 {
                     "name": "new_wallet",
                     "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "upgradeStudent",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                },
+                {
+                    "name": "args",
+                    "type": "optional<List<bytes>>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "upgradeEmployee",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                },
+                {
+                    "name": "args",
+                    "type": "optional<List<bytes>>",
+                    "multi_arg": true
                 }
             ],
             "outputs": []

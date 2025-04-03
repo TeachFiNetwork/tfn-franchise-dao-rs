@@ -246,6 +246,69 @@ school_config::SchoolConfigModule
         self.employees(employee_id).set(&employee);
     }
 
+    // upgrade endpoints
+    #[endpoint(upgradeStudent)]
+    fn upgrade_student(
+        &self,
+        address: ManagedAddress,
+        args: OptionalValue<ManagedArgBuffer<Self::Api>>
+    ) {
+        let student = self.get_student_by_wallet_or_address(address);
+        require!(student.is_some(), ERROR_STUDENT_NOT_FOUND);
+
+        if self.blockchain().get_caller() != student.clone().unwrap().wallet {
+            self.only_board_members();
+        }
+
+        let upgrade_args = match args {
+            OptionalValue::Some(args) => args,
+            OptionalValue::None => ManagedArgBuffer::new(),            
+        };
+        let template_student: ManagedAddress = self.dao_contract_proxy()
+            .contract(self.main_dao().get())
+            .template_student()
+            .execute_on_dest_context();
+        self.tx()
+            .to(student.unwrap().sc)
+            .gas(self.blockchain().get_gas_left())
+            .raw_upgrade()
+            .arguments_raw(upgrade_args)
+            .from_source(template_student)
+            .code_metadata(CodeMetadata::UPGRADEABLE | CodeMetadata::READABLE | CodeMetadata::PAYABLE_BY_SC)
+            .upgrade_async_call_and_exit();
+    }
+
+    #[endpoint(upgradeEmployee)]
+    fn upgrade_employee(
+        &self,
+        address: ManagedAddress,
+        args: OptionalValue<ManagedArgBuffer<Self::Api>>
+    ) {
+        let employee = self.get_employee_by_wallet_or_address(address);
+        require!(employee.is_some(), ERROR_EMPLOYEE_NOT_FOUND);
+
+        if self.blockchain().get_caller() != employee.clone().unwrap().wallet {
+            self.only_board_members();
+        }
+
+        let upgrade_args = match args {
+            OptionalValue::Some(args) => args,
+            OptionalValue::None => ManagedArgBuffer::new(),            
+        };
+        let template_employee: ManagedAddress = self.dao_contract_proxy()
+            .contract(self.main_dao().get())
+            .template_employee()
+            .execute_on_dest_context();
+        self.tx()
+            .to(employee.unwrap().sc)
+            .gas(self.blockchain().get_gas_left())
+            .raw_upgrade()
+            .arguments_raw(upgrade_args)
+            .from_source(template_employee)
+            .code_metadata(CodeMetadata::UPGRADEABLE | CodeMetadata::READABLE | CodeMetadata::PAYABLE_BY_SC)
+            .upgrade_async_call_and_exit();
+    }
+
     // proxies
     #[proxy]
     fn dao_contract_proxy(&self) -> tfn_dao::Proxy<Self::Api>;

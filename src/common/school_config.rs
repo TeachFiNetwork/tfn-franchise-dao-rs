@@ -191,6 +191,22 @@ super::config::ConfigModule
         None
     }
 
+    #[view(getEmployeeByWalletOrAddress)]
+    fn get_employee_by_wallet_or_address(&self, address: ManagedAddress) -> Option<Employee<Self::Api>> {
+        for i in 0..self.last_employee_id().get() {
+            if self.employees(i).is_empty() {
+                continue;
+            }
+
+            let employee = self.employees(i).get();
+            if employee.wallet == address || employee.sc == address {
+                return Some(employee);
+            }
+        }
+
+        None
+    }
+
     // students
     #[view(getStudent)]
     #[storage_mapper("students")]
@@ -247,6 +263,22 @@ super::config::ConfigModule
 
             let student = self.students(i).get();
             if student.wallet == address {
+                return Some(student);
+            }
+        }
+
+        None
+    }
+
+    #[view(getStudentByWalletOrAddress)]
+    fn get_student_by_wallet_or_address(&self, address: ManagedAddress) -> Option<Student<Self::Api>> {
+        for i in 0..self.last_student_id().get() {
+            if self.students(i).is_empty() {
+                continue;
+            }
+
+            let student = self.students(i).get();
+            if student.wallet == address || student.sc == address {
                 return Some(student);
             }
         }
