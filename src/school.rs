@@ -1,17 +1,14 @@
 multiversx_sc::imports!();
 
 use crate::common::errors::*;
+use crate::common::consts::*;
 use crate::common::school_config::{self, *};
 use crate::common::config::{self, State};
 use crate::common::board_config;
 
-use tfn_dao::common::config::ProxyTrait as _;
 use tfn_dao::common::board_config::ProxyTrait as _;
-use tfn_employee::ProxyTrait as EmployeeProxy;
-use tfn_employee::common::config::ProxyTrait as _;
-use tfn_student::ProxyTrait as StudentProxy;
-use tfn_student::common::config::ProxyTrait as _;
 use tfn_platform::ProxyTrait as PlatformProxy;
+use tfn_digital_identity::{ProxyTrait as DigitalIdentityProxy, common::config::{ProxyTrait as _, Identity}};
 
 #[multiversx_sc::module]
 pub trait SchoolModule:
@@ -72,37 +69,76 @@ school_config::SchoolConfigModule
     }
 
     // students endpoints
-    #[endpoint(enrollStudent)]
-    fn enroll_student(&self, name: ManagedBuffer, class_id: u64) -> ManagedAddress {
+    #[endpoint(registerStudentIdentity)]
+    fn register_student_identity(
+        &self,
+        student_id: u64,
+    ) -> u64 {
         require!(self.state().get() == State::Active, ERROR_NOT_ACTIVE);
         self.only_board_members();
 
-        let template_student = self.dao_contract_proxy()
-            .contract(self.main_dao().get())
-            .template_student()
+        let mut keys: ManagedVec<ManagedBuffer> = ManagedVec::new();
+        keys.push(CLASS_KEY.into());
+        keys.push(MARK_KEY.into());
+        keys.push(ABSENCE_KEY.into());
+        keys.push(TAX_VALIDITY_KEY.into());
+        self.digital_identity_contract_proxy()
+            .contract(self.digital_identity_sc().get())
+            .request_link(
+                self.identity_id().get(),
+                student_id,
+                STUDENT_RELATION,
+                OptionalValue::Some(keys),
+            )
+            .execute_on_dest_context()
+    }
+
+    fn unregister_identity(
+        &self,
+        id: u64,
+    ) {
+        require!(self.state().get() == State::Active, ERROR_NOT_ACTIVE);
+        self.only_board_members();
+
+        self.digital_identity_contract_proxy()
+            .contract(self.digital_identity_sc().get())
+            .remove_identity_link(self.identity_id().get(), id)
+            .execute_on_dest_context::<()>();
+    }
+
+    #[endpoint(enrollStudent)]
+    fn enroll_student(&self, student_identity_id: u64, class_id: u64) -> u64 {
+        require!(self.state().get() == State::Active, ERROR_NOT_ACTIVE);
+        self.only_board_members();
+
+        let is_parent: bool = self.digital_identity_contract_proxy()
+            .contract(self.digital_identity_sc().get())
+            .is_parent_of(self.identity_id().get(), student_identity_id)
             .execute_on_dest_context();
-        let (new_address, ()) = self.student_contract_proxy()
-            .init(name)
-            .deploy_from_source(
-                &template_student,
-                CodeMetadata::UPGRADEABLE | CodeMetadata::READABLE | CodeMetadata::PAYABLE_BY_SC,
-            );
-        let student = Student {
-            id: self.last_student_id().get(),
-            sc: new_address.clone(),
-            wallet: ManagedAddress::zero(),
-            class_id,
-            tax_validity: 0,
-        };
-        self.students(student.id).set(&student);
-        self.last_student_id().set(student.id + 1);
+        require!(is_parent, ERROR_IDENTITY_NOT_REGISTERED);
+
+        let mut keys_values: MultiValueEncoded<(ManagedBuffer, ManagedBuffer)> = MultiValueEncoded::new();
+        keys_values.push((CLASS_KEY.into(), BigUint::from(class_id).to_bytes_be_buffer()));
+        keys_values.push((TAX_VALIDITY_KEY.into(), BigUint::zero().to_bytes_be_buffer()));
+        self.digital_identity_contract_proxy()
+            .contract(self.digital_identity_sc().get())
+            .add_identity_keys_values(student_identity_id, keys_values)
+            .execute_on_dest_context::<()>();
+        let student_identity: Identity<Self::Api> = self.digital_identity_contract_proxy()
+            .contract(self.digital_identity_sc().get())
+            .identities(student_identity_id)
+            .execute_on_dest_context();
+
+        let student_id = self.last_student_id().get();
+        self.students(student_id).set(student_identity_id);
+        self.last_student_id().set(student_id + 1);
 
         self.platform_contract_proxy()
             .contract(self.platform_sc().get())
-            .whitelist_address(student.sc)
+            .whitelist_address(student_identity.address)
             .execute_on_dest_context::<()>();
 
-        new_address
+        student_id
     }
 
     #[endpoint(expellStudent)]
@@ -111,96 +147,81 @@ school_config::SchoolConfigModule
         self.only_board_members();
         require!(!self.students(student_id).is_empty(), ERROR_STUDENT_NOT_FOUND);
 
-        let student = self.students(student_id).get();
-        self.student_contract_proxy()
-            .contract(student.sc.clone())
-            .set_state_inactive()
-            .execute_on_dest_context::<()>();
-        self.students(student_id).clear();
-
-        self.platform_contract_proxy()
-            .contract(self.platform_sc().get())
-            .remove_address(student.sc)
-            .execute_on_dest_context::<()>();
-        if student.wallet != ManagedAddress::zero() {
-            self.platform_contract_proxy()
-                .contract(self.platform_sc().get())
-                .remove_address(student.wallet)
-                .execute_on_dest_context::<()>();
-        }
-    }
-
-    #[endpoint(reEnrollStudent)]
-    fn re_enroll_student(&self, class_id: u64, sc: ManagedAddress) {
-        require!(self.state().get() == State::Active, ERROR_NOT_ACTIVE);
-        self.only_board_members();
-
-        let wallet: ManagedAddress = self.student_contract_proxy()
-            .contract(sc.clone())
-            .wallet()
+        let student_identity: Identity<Self::Api> = self.digital_identity_contract_proxy()
+            .contract(self.digital_identity_sc().get())
+            .identities(self.students(student_id).take())
             .execute_on_dest_context();
-        let student = Student {
-            id: self.last_student_id().get(),
-            sc,
-            wallet: wallet.clone(),
-            class_id,
-            tax_validity: 0,
-        };
-        self.students(student.id).set(&student);
-        self.last_student_id().set(student.id + 1);
-        self.student_contract_proxy()
-            .contract(student.sc.clone())
-            .set_state_active()
-            .execute_on_dest_context::<()>();
+
         self.platform_contract_proxy()
             .contract(self.platform_sc().get())
-            .whitelist_address(student.sc)
+            .remove_address(student_identity.address)
             .execute_on_dest_context::<()>();
-        if wallet != ManagedAddress::zero() {
-            self.platform_contract_proxy()
-                .contract(self.platform_sc().get())
-                .whitelist_address(wallet)
-                .execute_on_dest_context::<()>();
-        }
-    }
 
-    #[endpoint(changeStudentWallet)]
-    fn change_student_wallet(&self, student_id: u64, new_wallet: ManagedAddress) {
-        require!(self.state().get() == State::Active, ERROR_NOT_ACTIVE);
-        self.only_board_members();
-        require!(!self.students(student_id).is_empty(), ERROR_STUDENT_NOT_FOUND);
-
-        let mut student = self.students(student_id).get();
-        student.wallet = new_wallet;
-        self.students(student_id).set(&student);
+        self.unregister_identity(student_identity.id);
     }
 
     // employees endpoints
-    #[endpoint(hireEmployee)]
-    fn hire_employee(&self, name: ManagedBuffer, is_teacher: bool) -> ManagedAddress {
+    #[endpoint(registerEmployeeIdentity)]
+    fn register_employee_identity(
+        &self,
+        employee_id: u64,
+        is_teacher: bool,
+    ) -> u64 {
         require!(self.state().get() == State::Active, ERROR_NOT_ACTIVE);
         self.only_board_members();
 
-        let template_employee = self.dao_contract_proxy()
-            .contract(self.main_dao().get())
-            .template_employee()
-            .execute_on_dest_context();
-        let (new_address, ()) = self.employee_contract_proxy()
-            .init(name)
-            .deploy_from_source(
-                &template_employee,
-                CodeMetadata::UPGRADEABLE | CodeMetadata::READABLE | CodeMetadata::PAYABLE_BY_SC,
-            );
-        let employee = Employee {
-            id: self.last_employee_id().get(),
-            sc: new_address.clone(),
-            wallet: ManagedAddress::zero(),
-            is_teacher,
+        let mut keys: ManagedVec<ManagedBuffer> = ManagedVec::new();
+        keys.push(JOB_KEY.into());
+        keys.push(SALARY_KEY.into());
+        let relation = if is_teacher {
+            TEACHER_RELATION
+        } else {
+            EMPLOYEE_RELATION
         };
-        self.employees(employee.id).set(&employee);
-        self.last_employee_id().set(employee.id + 1);
+        self.digital_identity_contract_proxy()
+            .contract(self.digital_identity_sc().get())
+            .request_link(
+                self.identity_id().get(),
+                employee_id,
+                relation,
+                OptionalValue::Some(keys),
+            )
+            .execute_on_dest_context()
+    }
 
-        new_address
+    #[endpoint(hireEmployee)]
+    fn hire_employee(&self, employee_identity_id: u64, job: ManagedBuffer, salary: BigUint) -> u64 {
+        require!(self.state().get() == State::Active, ERROR_NOT_ACTIVE);
+        self.only_board_members();
+
+        let is_parent: bool = self.digital_identity_contract_proxy()
+            .contract(self.digital_identity_sc().get())
+            .is_parent_of(self.identity_id().get(), employee_identity_id)
+            .execute_on_dest_context();
+            require!(is_parent, ERROR_IDENTITY_NOT_REGISTERED);
+
+        let mut keys_values: MultiValueEncoded<(ManagedBuffer, ManagedBuffer)> = MultiValueEncoded::new();
+            keys_values.push((JOB_KEY.into(), job));
+            keys_values.push((SALARY_KEY.into(), salary.to_bytes_be_buffer()));
+        self.digital_identity_contract_proxy()
+            .contract(self.digital_identity_sc().get())
+            .add_identity_keys_values(employee_identity_id, keys_values)
+            .execute_on_dest_context::<()>();
+        let employee_identity: Identity<Self::Api> = self.digital_identity_contract_proxy()
+            .contract(self.digital_identity_sc().get())
+            .identities(employee_identity_id)
+            .execute_on_dest_context();
+
+        let employee_id = self.last_employee_id().get();
+        self.employees(employee_id).set(employee_identity_id);
+        self.last_employee_id().set(employee_id + 1);
+
+        self.platform_contract_proxy()
+            .contract(self.platform_sc().get())
+            .whitelist_address(employee_identity.address)
+            .execute_on_dest_context::<()>();
+
+        employee_id
     }
 
     #[endpoint(fireEmployee)]
@@ -209,111 +230,17 @@ school_config::SchoolConfigModule
         self.only_board_members();
         require!(!self.employees(employee_id).is_empty(), ERROR_EMPLOYEE_NOT_FOUND);
 
-        let employee = self.employees(employee_id).get();
-        self.employee_contract_proxy()
-            .contract(employee.sc)
-            .set_state_inactive()
+        let employee_identity: Identity<Self::Api> = self.digital_identity_contract_proxy()
+            .contract(self.digital_identity_sc().get())
+            .identities(self.employees(employee_id).take())
+            .execute_on_dest_context();
+
+        self.platform_contract_proxy()
+            .contract(self.platform_sc().get())
+            .remove_address(employee_identity.address)
             .execute_on_dest_context::<()>();
-        self.employees(employee_id).clear();
-    }
 
-    #[endpoint(reHireEmployee)]
-    fn re_hire_employee(&self, sc: ManagedAddress, is_teacher: bool) {
-        require!(self.state().get() == State::Active, ERROR_NOT_ACTIVE);
-        self.only_board_members();
-
-        let wallet = self.employee_contract_proxy()
-            .contract(sc.clone())
-            .wallet()
-            .execute_on_dest_context();
-        let employee = Employee {
-            id: self.last_employee_id().get(),
-            sc,
-            wallet,
-            is_teacher,
-        };
-        self.employees(employee.id).set(&employee);
-        self.last_employee_id().set(employee.id + 1);
-        self.employee_contract_proxy()
-            .contract(employee.sc.clone())
-            .set_state_active()
-            .execute_on_dest_context::<()>();
-    }
-
-    #[endpoint(changeEmployeeWallet)]
-    fn change_employee_wallet(&self, employee_id: u64, new_wallet: ManagedAddress) {
-        require!(self.state().get() == State::Active, ERROR_NOT_ACTIVE);
-        self.only_board_members();
-        require!(!self.employees(employee_id).is_empty(), ERROR_EMPLOYEE_NOT_FOUND);
-
-        let mut employee = self.employees(employee_id).get();
-        employee.wallet = new_wallet;
-        self.employees(employee_id).set(&employee);
-    }
-
-    // upgrade endpoints
-    #[endpoint(upgradeStudent)]
-    fn upgrade_student(
-        &self,
-        address: ManagedAddress,
-        args: OptionalValue<ManagedArgBuffer<Self::Api>>
-    ) {
-        let student = self.get_student_by_wallet_or_address(address);
-        require!(student.is_some(), ERROR_STUDENT_NOT_FOUND);
-
-        let caller = self.blockchain().get_caller();
-        if caller != student.clone().unwrap().wallet && !self.is_dao_board_member(&caller) {
-            self.only_board_members();
-        }
-
-        let upgrade_args = match args {
-            OptionalValue::Some(args) => args,
-            OptionalValue::None => ManagedArgBuffer::new(),            
-        };
-        let template_student: ManagedAddress = self.dao_contract_proxy()
-            .contract(self.main_dao().get())
-            .template_student()
-            .execute_on_dest_context();
-        self.tx()
-            .to(student.unwrap().sc)
-            .gas(self.blockchain().get_gas_left())
-            .raw_upgrade()
-            .arguments_raw(upgrade_args)
-            .from_source(template_student)
-            .code_metadata(CodeMetadata::UPGRADEABLE | CodeMetadata::READABLE | CodeMetadata::PAYABLE_BY_SC)
-            .upgrade_async_call_and_exit();
-    }
-
-    #[endpoint(upgradeEmployee)]
-    fn upgrade_employee(
-        &self,
-        address: ManagedAddress,
-        args: OptionalValue<ManagedArgBuffer<Self::Api>>
-    ) {
-        let employee = self.get_employee_by_wallet_or_address(address);
-        require!(employee.is_some(), ERROR_EMPLOYEE_NOT_FOUND);
-
-        let caller = self.blockchain().get_caller();
-        if caller != employee.clone().unwrap().wallet && !self.is_dao_board_member(&caller) {
-            self.only_board_members();
-        }
-
-        let upgrade_args = match args {
-            OptionalValue::Some(args) => args,
-            OptionalValue::None => ManagedArgBuffer::new(),            
-        };
-        let template_employee: ManagedAddress = self.dao_contract_proxy()
-            .contract(self.main_dao().get())
-            .template_employee()
-            .execute_on_dest_context();
-        self.tx()
-            .to(employee.unwrap().sc)
-            .gas(self.blockchain().get_gas_left())
-            .raw_upgrade()
-            .arguments_raw(upgrade_args)
-            .from_source(template_employee)
-            .code_metadata(CodeMetadata::UPGRADEABLE | CodeMetadata::READABLE | CodeMetadata::PAYABLE_BY_SC)
-            .upgrade_async_call_and_exit();
+        self.unregister_identity(employee_identity.id);
     }
 
     // helpers
@@ -327,12 +254,6 @@ school_config::SchoolConfigModule
     // proxies
     #[proxy]
     fn dao_contract_proxy(&self) -> tfn_dao::Proxy<Self::Api>;
-
-    #[proxy]
-    fn employee_contract_proxy(&self) -> tfn_employee::Proxy<Self::Api>;
-
-    #[proxy]
-    fn student_contract_proxy(&self) -> tfn_student::Proxy<Self::Api>;
 
     #[proxy]
     fn platform_contract_proxy(&self) -> tfn_platform::Proxy<Self::Api>;

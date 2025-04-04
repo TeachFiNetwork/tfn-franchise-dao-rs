@@ -20,11 +20,8 @@ version = "0.54.4"
 [dependencies.tfn-dao]
 path = "../tfn-dao-rs"
 
-[dependencies.tfn-employee]
-path = "../tfn-employee-rs"
-
-[dependencies.tfn-student]
-path = "../tfn-student-rs"
-
 [dependencies.tfn-platform]
 path = "../tfn-platform-rs"
+
+[dependencies.tfn-digital-identity]
+path = "../tfn-digital-identity-rs"

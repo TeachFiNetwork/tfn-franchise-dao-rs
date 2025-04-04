@@ -125,22 +125,33 @@ board_config::BoardConfigModule
     fn state(&self) -> SingleValueMapper<State>;
 
     // contracts
-    #[view(getMainDAO)]
-    #[storage_mapper("main_dao")]
+    #[view(getMainDAOAddress)]
+    #[storage_mapper("main_dao_sc")]
     fn main_dao(&self) -> SingleValueMapper<ManagedAddress>;
 
-    #[view(getPlatform)]
-    #[storage_mapper("platform")]
+    #[view(getPlatformAddress)]
+    #[storage_mapper("platform_sc")]
     fn platform_sc(&self) -> SingleValueMapper<ManagedAddress>;
 
-    #[view(getDigitalIdentity)]
-    #[storage_mapper("digital_identity")]
+    #[view(getDigitalIdentityAddress)]
+    #[storage_mapper("digital_identity_sc")]
     fn digital_identity_sc(&self) -> SingleValueMapper<ManagedAddress>;
 
     // governance token
     #[view(getGovernanceToken)]
     #[storage_mapper("governance_token")]
     fn governance_token(&self) -> SingleValueMapper<TokenIdentifier>;
+
+    // digital identity
+    #[view(getIdentityId)]
+    #[storage_mapper("identity_id")]
+    fn identity_id(&self) -> SingleValueMapper<u64>;
+
+    #[only_owner]
+    #[endpoint(setIdentityId)]
+    fn set_identity_id(&self, id: u64) {
+        self.identity_id().set_if_empty(id);
+    }
 
     // voting tokens
     #[view(getVotingTokens)]

@@ -1,8 +1,9 @@
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
-use crate::common::errors::*;
+use crate::common::{consts::{CLASS_KEY, STUDENT_RELATION}, errors::*};
 use super::board_config;
+use tfn_digital_identity::common::config::{ProxyTrait as _, Identity};
 
 #[type_abi]
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, ManagedVecItem, PartialEq, Eq, Clone, Debug)]
@@ -13,25 +14,6 @@ pub struct SubjectSlot<M: ManagedTypeApi> {
     pub end_time: usize,
     pub subject: ManagedBuffer<M>,
     pub teacher_id: u64,
-}
-
-#[type_abi]
-#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, ManagedVecItem, PartialEq, Eq, Clone, Debug)]
-pub struct Employee<M: ManagedTypeApi> {
-    pub id: u64,
-    pub sc: ManagedAddress<M>,
-    pub wallet: ManagedAddress<M>,
-    pub is_teacher: bool,
-}
-
-#[type_abi]
-#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, ManagedVecItem, PartialEq, Eq, Clone, Debug)]
-pub struct Student<M: ManagedTypeApi> {
-    pub id: u64,
-    pub sc: ManagedAddress<M>,
-    pub wallet: ManagedAddress<M>,
-    pub class_id: u64,
-    pub tax_validity: u64,
 }
 
 #[type_abi]
@@ -82,46 +64,48 @@ super::config::ConfigModule
     }
 
     #[view(getClassStudents)]
-    fn get_class_students(&self, class_id: u64) -> ManagedVec<Self::Api, Student<Self::Api>> {
+    fn get_class_students(&self, class_id: u64) -> ManagedVec<Identity<Self::Api>> {
         require!(!self.classes(class_id).is_empty(), ERROR_CLASS_NOT_FOUND);
 
-        let mut students = ManagedVec::new();
-        for i in 0..self.last_student_id().get() {
-            if self.students(i).is_empty() {
-                continue;
-            }
-
-            let student = self.students(i).get();
-            if student.class_id == class_id {
-                students.push(student);
-            }
-        }
+        let students: ManagedVec<Identity<Self::Api>> = self.digital_identity_contract_proxy()
+            .contract(self.digital_identity_sc().get())
+            .get_children_with_same_last_value(
+                self.identity_id().get(),
+                ManagedBuffer::from(CLASS_KEY),
+                BigUint::from(class_id).to_bytes_be_buffer(),
+                OptionalValue::Some(STUDENT_RELATION),
+            )
+            .execute_on_dest_context();
 
         students
     }
 
     #[view(getClassTeachers)]
-    fn get_class_teachers(&self, class_id: u64) -> ManagedVec<Self::Api, Employee<Self::Api>> {
+    fn get_class_teachers(&self, class_id: u64) -> ManagedVec<Identity<Self::Api>> {
         let class = self.classes(class_id).get();
-        let mut teachers: ManagedVec<Self::Api, Employee<Self::Api>> = ManagedVec::new();
+        let mut teachers_ids: ManagedVec<u64> = ManagedVec::new();
         for time_slot in class.schedule.iter() {
             let mut found = false;
-            for t in teachers.into_iter() {
-                if t.id == time_slot.teacher_id {
+            for teacher_id in teachers_ids.into_iter() {
+                if teacher_id == time_slot.teacher_id {
                     found = true;
                     break;
                 }
             }
             if !found {
-                teachers.push(self.employees(time_slot.teacher_id).get());
+                teachers_ids.push(time_slot.teacher_id);
             }
         }
+        let teachers: ManagedVec<Identity<Self::Api>> = self.digital_identity_contract_proxy()
+            .contract(self.digital_identity_sc().get())
+            .get_multiple_identities(teachers_ids)
+            .execute_on_dest_context();
 
         teachers
     }
 
     #[view(getFullClassInfo)]
-    fn get_full_class_info(&self, class_id: u64) -> (Class<Self::Api>, ManagedVec<Self::Api, Student<Self::Api>>, ManagedVec<Self::Api, Employee<Self::Api>>) {
+    fn get_full_class_info(&self, class_id: u64) -> (Class<Self::Api>, ManagedVec<Identity<Self::Api>>, ManagedVec<Identity<Self::Api>>) {
         let students = self.get_class_students(class_id);
         let teachers = self.get_class_teachers(class_id);
 
@@ -131,7 +115,7 @@ super::config::ConfigModule
     // employees
     #[view(getEmployee)]
     #[storage_mapper("employees")]
-    fn employees(&self, id: u64) -> SingleValueMapper<Employee<Self::Api>>;
+    fn employees(&self, id: u64) -> SingleValueMapper<u64>;
 
     #[view(getLastEmployeeId)]
     #[storage_mapper("last_employee_id")]
@@ -149,68 +133,33 @@ super::config::ConfigModule
     }
 
     #[view(getEmployees)]
-    fn get_employees(&self) -> ManagedVec<Self::Api, Employee<Self::Api>> {
-        let mut employees = ManagedVec::new();
+    fn get_employees(&self) -> ManagedVec<Identity<Self::Api>> {
+        let mut employees_ids = ManagedVec::new();
         for i in 0..self.last_employee_id().get() {
             if !self.employees(i).is_empty() {
-                employees.push(self.employees(i).get());
+                employees_ids.push(self.employees(i).get());
             }
         }
+
+        let employees: ManagedVec<Identity<Self::Api>> = self.digital_identity_contract_proxy()
+            .contract(self.digital_identity_sc().get())
+            .get_multiple_identities(employees_ids)
+            .execute_on_dest_context();
         employees
     }
 
-    #[view(getEmployeeByAddress)]
-    fn get_employee_by_address(&self, address: ManagedAddress) -> Option<Employee<Self::Api>> {
-        for i in 0..self.last_employee_id().get() {
-            if self.employees(i).is_empty() {
-                continue;
-            }
-
-            let employee = self.employees(i).get();
-            if employee.sc == address {
-                return Some(employee);
-            }
-        }
-
-        None
-    }
-
-    #[view(getEmployeeByWallet)]
-    fn get_employee_by_wallet(&self, address: ManagedAddress) -> Option<Employee<Self::Api>> {
-        for i in 0..self.last_employee_id().get() {
-            if self.employees(i).is_empty() {
-                continue;
-            }
-
-            let employee = self.employees(i).get();
-            if employee.wallet == address {
-                return Some(employee);
-            }
-        }
-
-        None
-    }
-
-    #[view(getEmployeeByWalletOrAddress)]
-    fn get_employee_by_wallet_or_address(&self, address: ManagedAddress) -> Option<Employee<Self::Api>> {
-        for i in 0..self.last_employee_id().get() {
-            if self.employees(i).is_empty() {
-                continue;
-            }
-
-            let employee = self.employees(i).get();
-            if employee.wallet == address || employee.sc == address {
-                return Some(employee);
-            }
-        }
-
-        None
+    #[view(getIdentityByAddress)]
+    fn get_identity_by_address(&self, address: ManagedAddress) -> Option<Identity<Self::Api>> {
+        self.digital_identity_contract_proxy()
+            .contract(self.digital_identity_sc().get())
+            .get_identity_by_wallet(&address)
+            .execute_on_dest_context()
     }
 
     // students
     #[view(getStudent)]
     #[storage_mapper("students")]
-    fn students(&self, id: u64) -> SingleValueMapper<Student<Self::Api>>;
+    fn students(&self, id: u64) -> SingleValueMapper<u64>;
 
     #[view(getLastStudentId)]
     #[storage_mapper("last_student_id")]
@@ -228,62 +177,20 @@ super::config::ConfigModule
     }
 
     #[view(getStudents)]
-    fn get_students(&self) -> ManagedVec<Self::Api, Student<Self::Api>> {
-        let mut students = ManagedVec::new();
+    fn get_students(&self) -> ManagedVec<Identity<Self::Api>> {
+        let mut students_ids = ManagedVec::new();
         for i in 0..self.last_student_id().get() {
             if !self.students(i).is_empty() {
-                students.push(self.students(i).get());
+                students_ids.push(self.students(i).get());
             }
         }
+
+        let students: ManagedVec<Identity<Self::Api>> = self.digital_identity_contract_proxy()
+            .contract(self.digital_identity_sc().get())
+            .get_multiple_identities(students_ids)
+            .execute_on_dest_context();
+
         students
-    }
-
-    #[view(getStudentByAddress)]
-    fn get_student_by_address(&self, address: ManagedAddress) -> Option<Student<Self::Api>> {
-        for i in 0..self.last_student_id().get() {
-            if self.students(i).is_empty() {
-                continue;
-            }
-
-            let student = self.students(i).get();
-            if student.sc == address {
-                return Some(student);
-            }
-        }
-
-        None
-    }
-
-    #[view(getStudentByWallet)]
-    fn get_student_by_wallet(&self, address: ManagedAddress) -> Option<Student<Self::Api>> {
-        for i in 0..self.last_student_id().get() {
-            if self.students(i).is_empty() {
-                continue;
-            }
-
-            let student = self.students(i).get();
-            if student.wallet == address {
-                return Some(student);
-            }
-        }
-
-        None
-    }
-
-    #[view(getStudentByWalletOrAddress)]
-    fn get_student_by_wallet_or_address(&self, address: ManagedAddress) -> Option<Student<Self::Api>> {
-        for i in 0..self.last_student_id().get() {
-            if self.students(i).is_empty() {
-                continue;
-            }
-
-            let student = self.students(i).get();
-            if student.wallet == address || student.sc == address {
-                return Some(student);
-            }
-        }
-
-        None
     }
 
     // tax amount
@@ -297,4 +204,9 @@ super::config::ConfigModule
 
         self.tax_amount().set(new_tax_amount);
     }
+
+    // proxies
+
+    #[proxy]
+    fn digital_identity_contract_proxy(&self) -> tfn_digital_identity::Proxy<Self::Api>;
 }

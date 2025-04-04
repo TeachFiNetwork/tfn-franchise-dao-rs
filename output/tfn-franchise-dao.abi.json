@@ -140,7 +140,7 @@
             ]
         },
         {
-            "name": "getMainDAO",
+            "name": "getMainDAOAddress",
             "mutability": "readonly",
             "inputs": [],
             "outputs": [
@@ -150,7 +150,7 @@
             ]
         },
         {
-            "name": "getPlatform",
+            "name": "getPlatformAddress",
             "mutability": "readonly",
             "inputs": [],
             "outputs": [
@@ -160,7 +160,7 @@
             ]
         },
         {
-            "name": "getDigitalIdentity",
+            "name": "getDigitalIdentityAddress",
             "mutability": "readonly",
             "inputs": [],
             "outputs": [
@@ -178,6 +178,28 @@
                     "type": "TokenIdentifier"
                 }
             ]
+        },
+        {
+            "name": "getIdentityId",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "setIdentityId",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
         },
         {
             "name": "getVotingTokens",
@@ -429,7 +451,7 @@
             ],
             "outputs": [
                 {
-                    "type": "List<Student>"
+                    "type": "List<Identity>"
                 }
             ]
         },
@@ -444,7 +466,7 @@
             ],
             "outputs": [
                 {
-                    "type": "List<Employee>"
+                    "type": "List<Identity>"
                 }
             ]
         },
@@ -459,7 +481,7 @@
             ],
             "outputs": [
                 {
-                    "type": "tuple<Class,List<Student>,List<Employee>>"
+                    "type": "tuple<Class,List<Identity>,List<Identity>>"
                 }
             ]
         },
@@ -474,7 +496,7 @@
             ],
             "outputs": [
                 {
-                    "type": "Employee"
+                    "type": "u64"
                 }
             ]
         },
@@ -504,12 +526,12 @@
             "inputs": [],
             "outputs": [
                 {
-                    "type": "List<Employee>"
+                    "type": "List<Identity>"
                 }
             ]
         },
         {
-            "name": "getEmployeeByAddress",
+            "name": "getIdentityByAddress",
             "mutability": "readonly",
             "inputs": [
                 {
@@ -519,37 +541,7 @@
             ],
             "outputs": [
                 {
-                    "type": "Option<Employee>"
-                }
-            ]
-        },
-        {
-            "name": "getEmployeeByWallet",
-            "mutability": "readonly",
-            "inputs": [
-                {
-                    "name": "address",
-                    "type": "Address"
-                }
-            ],
-            "outputs": [
-                {
-                    "type": "Option<Employee>"
-                }
-            ]
-        },
-        {
-            "name": "getEmployeeByWalletOrAddress",
-            "mutability": "readonly",
-            "inputs": [
-                {
-                    "name": "address",
-                    "type": "Address"
-                }
-            ],
-            "outputs": [
-                {
-                    "type": "Option<Employee>"
+                    "type": "Option<Identity>"
                 }
             ]
         },
@@ -564,7 +556,7 @@
             ],
             "outputs": [
                 {
-                    "type": "Student"
+                    "type": "u64"
                 }
             ]
         },
@@ -594,52 +586,7 @@
             "inputs": [],
             "outputs": [
                 {
-                    "type": "List<Student>"
-                }
-            ]
-        },
-        {
-            "name": "getStudentByAddress",
-            "mutability": "readonly",
-            "inputs": [
-                {
-                    "name": "address",
-                    "type": "Address"
-                }
-            ],
-            "outputs": [
-                {
-                    "type": "Option<Student>"
-                }
-            ]
-        },
-        {
-            "name": "getStudentByWallet",
-            "mutability": "readonly",
-            "inputs": [
-                {
-                    "name": "address",
-                    "type": "Address"
-                }
-            ],
-            "outputs": [
-                {
-                    "type": "Option<Student>"
-                }
-            ]
-        },
-        {
-            "name": "getStudentByWalletOrAddress",
-            "mutability": "readonly",
-            "inputs": [
-                {
-                    "name": "address",
-                    "type": "Address"
-                }
-            ],
-            "outputs": [
-                {
-                    "type": "Option<Student>"
+                    "type": "List<Identity>"
                 }
             ]
         },
@@ -841,12 +788,27 @@
             "outputs": []
         },
         {
+            "name": "registerStudentIdentity",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "student_id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "u64"
+                }
+            ]
+        },
+        {
             "name": "enrollStudent",
             "mutability": "mutable",
             "inputs": [
                 {
-                    "name": "name",
-                    "type": "bytes"
+                    "name": "student_identity_id",
+                    "type": "u64"
                 },
                 {
                     "name": "class_id",
@@ -855,7 +817,7 @@
             ],
             "outputs": [
                 {
-                    "type": "Address"
+                    "type": "u64"
                 }
             ]
         },
@@ -871,42 +833,12 @@
             "outputs": []
         },
         {
-            "name": "reEnrollStudent",
+            "name": "registerEmployeeIdentity",
             "mutability": "mutable",
             "inputs": [
                 {
-                    "name": "class_id",
+                    "name": "employee_id",
                     "type": "u64"
-                },
-                {
-                    "name": "sc",
-                    "type": "Address"
-                }
-            ],
-            "outputs": []
-        },
-        {
-            "name": "changeStudentWallet",
-            "mutability": "mutable",
-            "inputs": [
-                {
-                    "name": "student_id",
-                    "type": "u64"
-                },
-                {
-                    "name": "new_wallet",
-                    "type": "Address"
-                }
-            ],
-            "outputs": []
-        },
-        {
-            "name": "hireEmployee",
-            "mutability": "mutable",
-            "inputs": [
-                {
-                    "name": "name",
-                    "type": "bytes"
                 },
                 {
                     "name": "is_teacher",
@@ -915,7 +847,30 @@
             ],
             "outputs": [
                 {
-                    "type": "Address"
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "hireEmployee",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "employee_identity_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "job",
+                    "type": "bytes"
+                },
+                {
+                    "name": "salary",
+                    "type": "BigUint"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "u64"
                 }
             ]
         },
@@ -926,68 +881,6 @@
                 {
                     "name": "employee_id",
                     "type": "u64"
-                }
-            ],
-            "outputs": []
-        },
-        {
-            "name": "reHireEmployee",
-            "mutability": "mutable",
-            "inputs": [
-                {
-                    "name": "sc",
-                    "type": "Address"
-                },
-                {
-                    "name": "is_teacher",
-                    "type": "bool"
-                }
-            ],
-            "outputs": []
-        },
-        {
-            "name": "changeEmployeeWallet",
-            "mutability": "mutable",
-            "inputs": [
-                {
-                    "name": "employee_id",
-                    "type": "u64"
-                },
-                {
-                    "name": "new_wallet",
-                    "type": "Address"
-                }
-            ],
-            "outputs": []
-        },
-        {
-            "name": "upgradeStudent",
-            "mutability": "mutable",
-            "inputs": [
-                {
-                    "name": "address",
-                    "type": "Address"
-                },
-                {
-                    "name": "args",
-                    "type": "optional<List<bytes>>",
-                    "multi_arg": true
-                }
-            ],
-            "outputs": []
-        },
-        {
-            "name": "upgradeEmployee",
-            "mutability": "mutable",
-            "inputs": [
-                {
-                    "name": "address",
-                    "type": "Address"
-                },
-                {
-                    "name": "args",
-                    "type": "optional<List<bytes>>",
-                    "multi_arg": true
                 }
             ],
             "outputs": []
@@ -1352,27 +1245,6 @@
                 }
             ]
         },
-        "Employee": {
-            "type": "struct",
-            "fields": [
-                {
-                    "name": "id",
-                    "type": "u64"
-                },
-                {
-                    "name": "sc",
-                    "type": "Address"
-                },
-                {
-                    "name": "wallet",
-                    "type": "Address"
-                },
-                {
-                    "name": "is_teacher",
-                    "type": "bool"
-                }
-            ]
-        },
         "EsdtTokenPayment": {
             "type": "struct",
             "fields": [
@@ -1387,6 +1259,47 @@
                 {
                     "name": "amount",
                     "type": "BigUint"
+                }
+            ]
+        },
+        "Identity": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "u64"
+                },
+                {
+                    "name": "is_corporate",
+                    "type": "bool"
+                },
+                {
+                    "name": "legal_id",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "birthdate",
+                    "type": "u64"
+                },
+                {
+                    "name": "address",
+                    "type": "Address"
+                },
+                {
+                    "name": "name",
+                    "type": "bytes"
+                },
+                {
+                    "name": "description",
+                    "type": "bytes"
+                },
+                {
+                    "name": "image",
+                    "type": "bytes"
+                },
+                {
+                    "name": "contact",
+                    "type": "List<bytes>"
                 }
             ]
         },
@@ -1506,31 +1419,6 @@
                 {
                     "name": "Active",
                     "discriminant": 1
-                }
-            ]
-        },
-        "Student": {
-            "type": "struct",
-            "fields": [
-                {
-                    "name": "id",
-                    "type": "u64"
-                },
-                {
-                    "name": "sc",
-                    "type": "Address"
-                },
-                {
-                    "name": "wallet",
-                    "type": "Address"
-                },
-                {
-                    "name": "class_id",
-                    "type": "u64"
-                },
-                {
-                    "name": "tax_validity",
-                    "type": "u64"
                 }
             ]
         },
