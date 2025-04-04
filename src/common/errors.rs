@@ -21,3 +21,4 @@ pub static ERROR_ZERO_VALUE: &[u8] = b"value cannot be zero";
 pub static ERROR_TOKEN_ALREADY_EXISTS: &[u8] = b"token already exists";
 pub static ERROR_TOKEN_NOT_FOUND: &[u8] = b"token not found";
 pub static ERROR_IDENTITY_NOT_REGISTERED: &[u8] = b"identity not registered";
+pub static ERROR_NOT_TEACHER_OF_CLASS_FOR_SUBJECT: &[u8] = b"not teacher of class for subject";

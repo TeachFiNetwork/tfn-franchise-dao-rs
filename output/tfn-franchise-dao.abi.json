@@ -546,6 +546,44 @@
             ]
         },
         {
+            "name": "getEmployeeIdByIdentityId",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "identity_id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "Option<u64>"
+                }
+            ]
+        },
+        {
+            "name": "isTeacherOfCass",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "teacher_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "class_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "opt_subject",
+                    "type": "Option<bytes>"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "bool"
+                }
+            ]
+        },
+        {
             "name": "getStudent",
             "mutability": "readonly",
             "inputs": [
@@ -881,6 +919,67 @@
                 {
                     "name": "employee_id",
                     "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "changeSalary",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "employee_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "new_salary",
+                    "type": "BigUint"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "giveMark",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "student_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "subject",
+                    "type": "bytes"
+                },
+                {
+                    "name": "score",
+                    "type": "u32"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "setAbsence",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "student_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "day_of_week",
+                    "type": "u32"
+                },
+                {
+                    "name": "start_time",
+                    "type": "u32"
+                },
+                {
+                    "name": "end_time",
+                    "type": "u32"
+                },
+                {
+                    "name": "subject",
+                    "type": "bytes"
                 }
             ],
             "outputs": []
