@@ -38,10 +38,16 @@ common::config::ConfigModule
         self.main_dao().set(&main_dao);
 
         let platform: ManagedAddress = self.dao_contract_proxy()
-            .contract(main_dao)
+            .contract(main_dao.clone())
             .platform_sc()
             .execute_on_dest_context();
         self.platform_sc().set(&platform);
+
+        let digital_identity: ManagedAddress = self.dao_contract_proxy()
+            .contract(main_dao)
+            .digital_identity_sc()
+            .execute_on_dest_context();
+        self.digital_identity_sc().set(&digital_identity);
 
         self.board_members().insert(owner.clone());
         self.voting_tokens().insert(token.clone(), BigUint::from(ONE));

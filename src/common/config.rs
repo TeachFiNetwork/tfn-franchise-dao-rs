@@ -133,6 +133,10 @@ board_config::BoardConfigModule
     #[storage_mapper("platform")]
     fn platform_sc(&self) -> SingleValueMapper<ManagedAddress>;
 
+    #[view(getDigitalIdentity)]
+    #[storage_mapper("digital_identity")]
+    fn digital_identity_sc(&self) -> SingleValueMapper<ManagedAddress>;
+
     // governance token
     #[view(getGovernanceToken)]
     #[storage_mapper("governance_token")]
