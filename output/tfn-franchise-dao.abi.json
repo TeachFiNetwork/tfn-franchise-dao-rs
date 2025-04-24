@@ -191,7 +191,6 @@
         },
         {
             "name": "setIdentityId",
-            "onlyOwner": true,
             "mutability": "mutable",
             "inputs": [
                 {

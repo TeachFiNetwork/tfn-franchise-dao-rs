@@ -147,7 +147,6 @@ board_config::BoardConfigModule
     #[storage_mapper("identity_id")]
     fn identity_id(&self) -> SingleValueMapper<u64>;
 
-    #[only_owner]
     #[endpoint(setIdentityId)]
     fn set_identity_id(&self, id: u64) {
         self.identity_id().set_if_empty(id);
